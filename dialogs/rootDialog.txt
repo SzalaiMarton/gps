@@ -1,0 +1,4 @@
+1. Create Street
+2. Create City
+Type in the number of the command you want to execute or type "exit" to close the program:
+i
