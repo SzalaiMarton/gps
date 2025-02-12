@@ -47,5 +47,5 @@ public:
         }
     };
 
-    void createStreet(string, int, vector<CityParts::Street*>, vector<CityParts::Street*>);
+    void createStreet(vector<string>);
 };

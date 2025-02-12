@@ -2,3 +2,9 @@ Name the street:
 i
 How long is the street?:
 i
+What other roads would you like to connect to this road(back)?
+l
+i
+What other roads would you like to connect to this road(front)?
+l
+i

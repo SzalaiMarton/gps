@@ -1,14 +1,22 @@
 #include "dialog.h"
 #include "city.h"
 
-string Dialog::writeText(Dialog::Text* outputText)
+string Dialog::writeText(Dialog::Text* outputText, int currentDialogIndex = 100)
 {
     string response = "";
-    cout << outputText->text << endl;
+    if (!outputText->text.empty())
+    {
+        cout << outputText->text << endl;
+    }
+    
     if (outputText->needInput)
     {
         cin >> response;
         return response;
+    }
+    else if (outputText->listItems)
+    {
+        
     }
     return response;
 }
@@ -33,15 +41,15 @@ void Dialog::loadRootText(Dialog::Text& dialog)
     file.close();
 }
 
-void Dialog::loadCreateStreetText(Dialog::Text& dialog, Dialog::Text& rootDialog)
+void Dialog::loadDialog(Dialog::Text& dialog, Dialog::Text& rootDialog, string path)
 {
     string tempText;
     Dialog::Text* pPreviousDialogAddress = nullptr;
     Dialog::Text* pCurrentDialog = &dialog;
     
-    ifstream file("dialogs//createStreet.txt");
+    ifstream file(path);
     if (!file.is_open()) {
-        cerr << "Error: Could not open file dialogs//createStreet.txt" << endl;
+        cerr << "Error: Could not open file " << path << endl;
         return;
     }
 
@@ -54,37 +62,10 @@ void Dialog::loadCreateStreetText(Dialog::Text& dialog, Dialog::Text& rootDialog
             }
             continue;
         }
-
-        pCurrentDialog->text = tempText;
-        Dialog::Text* nextDialog = new Dialog::Text("", false);
-        pCurrentDialog->nextTexts.push_back(nextDialog);
-        pPreviousDialogAddress = pCurrentDialog;
-
-        pCurrentDialog = nextDialog;
-    }
-
-    rootDialog.nextTexts.push_back(&dialog);
-    file.close();
-}
-
-void Dialog::loadCreateStreetText(Dialog::Text& dialog, Dialog::Text& rootDialog)
-{
-    string tempText;
-    Dialog::Text* pPreviousDialogAddress = nullptr;
-    Dialog::Text* pCurrentDialog = &dialog;
-    
-    ifstream file("dialogs//createCity.txt");
-    if (!file.is_open()) {
-        cerr << "Error: Could not open file dialogs//createCity.txt" << endl;
-        return;
-    }
-
-    while (getline(file, tempText))
-    {
-        if (tempText == "i")
+        else if (tempText == "l")
         {
             if (pPreviousDialogAddress) {
-                pPreviousDialogAddress->needInput = true;
+                pPreviousDialogAddress->listItems = true;
             }
             continue;
         }
@@ -95,25 +76,19 @@ void Dialog::loadCreateStreetText(Dialog::Text& dialog, Dialog::Text& rootDialog
 
         pCurrentDialog = nextDialog;
     }
-    rootDialog.nextTexts.push_back(&dialog);
-    file.close();
-}
 
-void Dialog::loadCityErrorText(Dialog::Text& dialog, Dialog::Text& rootDialog)
-{
-    string tempText;
-    ifstream file("dialogs//cityErrorMessage.txt");
-    rootDialog.nextTexts.push_back(&dialog);
-    while(getline(file, tempText))
+    if(pCurrentDialog->text.empty())
     {
-        dialog.text = tempText;
+        pPreviousDialogAddress->nextTexts.pop_back();
     }
+
+    rootDialog.nextTexts.push_back(&dialog);
     file.close();
 }
 
 Dialog::Text* Dialog::getNextText(Dialog::Text* currentDialog, int index)
 {
-    Dialog::Text wrongInput("wrong", false);
+    Dialog::Text wrongInput("wrong", false, false);
     Dialog::Text* pWrongInputAddress = &wrongInput;
     if (currentDialog->nextTexts.size() == 0)
     {
@@ -159,5 +134,39 @@ int Dialog::processInput(string response, vector<CityParts::City>& cityVector)
     else
     {
         return 100;
+    }
+}
+
+void Dialog::printListElementsToConsole(int currentDialogIndex)
+{
+    switch (currentDialogIndex)
+    {
+    case Dialog::CREATE_STREET_INDEX:
+        
+        break;
+    case Dialog::CREATE_CITY_INDEX:
+
+        break;
+    default:
+        return;
+    }
+}
+
+void Dialog::printStreets()
+{
+
+}
+
+void Dialog::printCities()
+{
+    
+}
+
+void Dialog::createObjectDialog(Dialog::Text* currentDialog, int currentDialogIndex)
+{
+    vector<string> response;
+    for (auto item : currentDialog->nextTexts)
+    {
+        response.push_back(Dialog::writeText(item, currentDialogIndex));
     }
 }
