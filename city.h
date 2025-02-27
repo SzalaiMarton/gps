@@ -40,6 +40,7 @@ public:
 
     struct City
     {
+        string cityName;
         City(Density population)
         {
             vector<Street*> collection_of_streets;
@@ -48,4 +49,7 @@ public:
     };
 
     void createStreet(vector<string>);
+
+    static vector<CityParts::City> cityVector;
+    static vector<CityParts::Street> streetVector;
 };

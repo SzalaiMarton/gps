@@ -6,7 +6,7 @@ string Dialog::writeText(Dialog::Text* outputText, int currentDialogIndex = 100)
     string response = "";
     if (!outputText->text.empty())
     {
-        cout << outputText->text << endl;
+        cout << outputText->text << endl; 
     }
     
     if (outputText->needInput)
@@ -110,7 +110,7 @@ bool Dialog::checkIfDialogIsValid(Dialog::Text* currentDialog)
     return true;
 }
 
-int Dialog::processInput(string response, vector<CityParts::City>& cityVector)
+int Dialog::processInput(string response)
 {
     if (response == "1")
     {
@@ -118,7 +118,7 @@ int Dialog::processInput(string response, vector<CityParts::City>& cityVector)
     }
     else if (response == "2")
     {
-        if (cityVector.empty())
+        if (CityParts::cityVector.empty())
         {
             return Dialog::CITY_ERROR_MESSAGE;
         }
@@ -142,10 +142,10 @@ void Dialog::printListElementsToConsole(int currentDialogIndex)
     switch (currentDialogIndex)
     {
     case Dialog::CREATE_STREET_INDEX:
-        
+        Dialog::printStreets();
         break;
     case Dialog::CREATE_CITY_INDEX:
-
+        Dialog::printCities();
         break;
     default:
         return;
@@ -154,12 +154,18 @@ void Dialog::printListElementsToConsole(int currentDialogIndex)
 
 void Dialog::printStreets()
 {
-
+    for (auto el : CityParts::streetVector)
+    {
+        cout << el.street_name << endl;
+    }
 }
 
 void Dialog::printCities()
 {
-    
+    for (auto el : CityParts::cityVector)
+    {
+        cout << el.cityName << endl;
+    }
 }
 
 void Dialog::createObjectDialog(Dialog::Text* currentDialog, int currentDialogIndex)

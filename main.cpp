@@ -7,19 +7,12 @@ string response = "first";
 Dialog::Text* currentDialog;
 int currentDialogIndex;
 
-CityParts cityparts;
-
-vector<CityParts::City> cityVector;
-vector<CityParts::Street> streetVector;
-
 string createStreetPath = "dialogs//createStreet.txt";
 string createCityPath = "dialogs//createCity.txt";
 string cityErrorMessageDialog = "dialogs//cityErrorMessage.txt";
 
 int main()
 {
-    
-
     Dialog::Text rootDialog("", false);
     dialog.loadRootText(rootDialog);
     dialog.pRootDialogAdress = &rootDialog;
@@ -37,7 +30,7 @@ int main()
     {
         currentDialog = dialog.pRootDialogAdress;
         response = dialog.writeText(currentDialog, 100);      
-        currentDialogIndex = dialog.processInput(response, cityVector);
+        currentDialogIndex = dialog.processInput(response);
 
         if (currentDialogIndex == -1)
         {

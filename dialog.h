@@ -30,21 +30,20 @@ public:
     };
 
     //functions-------------------------------------------------
-    string writeText(Dialog::Text*, int);
+    string static writeText(Dialog::Text*, int);
     Dialog::Text* getNextText(Dialog::Text*, int);
-    bool checkIfDialogIsValid(Dialog::Text*);
-    int processInput(string response, vector<CityParts::City>&);
-    void printListElementsToConsole(int);
-    void Dialog::printStreets();
-    void Dialog::printCities();
+    bool static checkIfDialogIsValid(Dialog::Text*);
+    int static processInput(string response);
+    void static printListElementsToConsole(int);
+    void static printStreets();
+    void static printCities();
 
     //createing objects-----------------------------------------
-    void createObjectDialog(Dialog::Text*, int);
-
+    void static createObjectDialog(Dialog::Text*, int);
 
     //load dialogs----------------------------------------------
-    void loadRootText(Dialog::Text&);
-    void loadDialog(Dialog::Text&, Dialog::Text&, string);
+    void static loadRootText(Dialog::Text&);
+    void static loadDialog(Dialog::Text&, Dialog::Text&, string);
 
     Dialog::Text* pRootDialogAdress;
 };
