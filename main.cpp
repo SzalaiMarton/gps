@@ -1,9 +1,8 @@
-#include "city.h"
 #include "dialog.h"
 #include <typeinfo>
 
 Dialog dialog;
-string response = "first";
+string response = "";
 Dialog::Text* currentDialog;
 int currentDialogIndex;
 
@@ -26,7 +25,7 @@ int main()
     Dialog::Text cityErrorMessage("", false);
     dialog.loadDialog(cityErrorMessage, rootDialog, cityErrorMessageDialog);
 
-    while (response != "exit")
+    do
     {
         currentDialog = dialog.pRootDialogAdress;
         response = dialog.writeText(currentDialog, 100);      
@@ -48,6 +47,6 @@ int main()
         {
             dialog.createObjectDialog(currentDialog, currentDialogIndex);
         }
-    }
+    } while (response != "exit");
     return 0;
 }

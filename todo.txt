@@ -1,2 +1,5 @@
-undifened reference: dialog
 dialogs need functionality
+
+
+compile all at once
+to run .\main.exe

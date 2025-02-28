@@ -48,7 +48,7 @@ public:
         }
     };
 
-    void createStreet(vector<string>);
+    void static createStreet(vector<string>);
 
     static vector<CityParts::City> cityVector;
     static vector<CityParts::Street> streetVector;
