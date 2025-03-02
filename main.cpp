@@ -45,7 +45,7 @@ int main()
         }
         else
         {
-            dialog.createObjectDialog(currentDialog, currentDialogIndex);
+            dialog.createObject(currentDialog, currentDialogIndex);
         }
     } while (response != "exit");
     return 0;

@@ -114,18 +114,18 @@ int Dialog::processInput(string response)
 {
     if (response == "1")
     {
-        return Dialog::CREATE_STREET_INDEX;
-    }
-    else if (response == "2")
-    {
         if (CityParts::cityVector.empty())
         {
             return Dialog::CITY_ERROR_MESSAGE;
         }
         else
         {
-            return Dialog::CREATE_CITY_INDEX;
+            return Dialog::CREATE_STREET_INDEX;
         }
+    }
+    else if (response == "2")
+    {
+        return Dialog::CREATE_CITY_INDEX;
     }
     else if (response == "exit")
     {
@@ -169,11 +169,19 @@ void Dialog::printCities()
     }
 }
 
-void Dialog::createObjectDialog(Dialog::Text* currentDialog, int currentDialogIndex)
+void Dialog::createObject(Dialog::Text* currentDialog, int currentDialogIndex)
 {
     vector<string> response;
     for (auto item : currentDialog->nextTexts)
     {
         response.push_back(Dialog::writeText(item, currentDialogIndex));
+    }
+    if(currentDialogIndex == Dialog::CREATE_STREET_INDEX)
+    {
+        CityParts::createStreet(response);
+    }
+    else if(currentDialogIndex == Dialog::CREATE_CITY_INDEX)
+    {
+        CityParts::createCity(response);
     }
 }

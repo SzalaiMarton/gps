@@ -1,12 +1,7 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <iostream>
 #include <fstream>
 #include "city.h"
-
-using namespace std;
 
 class Dialog
 {
@@ -39,7 +34,7 @@ public:
     void static printCities();
 
     //createing objects-----------------------------------------
-    void static createObjectDialog(Dialog::Text*, int);
+    void static createObject(Dialog::Text*, int);
 
     //load dialogs----------------------------------------------
     void static loadRootText(Dialog::Text&);

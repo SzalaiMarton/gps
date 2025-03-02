@@ -1,4 +1,13 @@
 dialogs need functionality
+some undefined reference problem again!!
+
+
+
+final product:
+-streets and cities are in vectors for the sake of quick search
+-from the street vector you can add streets to cities
+-shortest rout finder
+
 
 
 compile all at once
