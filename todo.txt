@@ -3,3 +3,5 @@ dialogs need functionality
 
 compile all at once
 to run .\main.exe
+fold all objs: ctrl+m ctrl+0
+unfold: ctrl+m ctrl+j

@@ -16,7 +16,7 @@ string Dialog::writeText(Dialog::Text* outputText, int currentDialogIndex = 100)
     }
     else if (outputText->listItems)
     {
-        
+        printListElementsToConsole(currentDialogIndex);
     }
     return response;
 }
@@ -148,6 +148,7 @@ void Dialog::printListElementsToConsole(int currentDialogIndex)
         Dialog::printCities();
         break;
     default:
+        cout << "Cannot list without index" << endl;
         return;
     }
 }
