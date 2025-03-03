@@ -1,9 +1,5 @@
-dialogs need functionality
-some undefined reference problem again!!
-
-
-
 final product:
+-terminal like dialogs: command with parameters
 -streets and cities are in vectors for the sake of quick search
 -from the street vector you can add streets to cities
 -shortest rout finder

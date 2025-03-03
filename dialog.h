@@ -6,6 +6,12 @@
 class Dialog
 {
 public:
+
+    enum Commands
+    {
+        HELP = "help",
+    };
+
     const static int CREATE_STREET_INDEX = 0;
     const static int CREATE_CITY_INDEX = 1;
     const static int CITY_ERROR_MESSAGE = 2;
@@ -16,6 +22,7 @@ public:
         string text;
         bool needInput;
         bool listItems;
+
         Text(string input_text, bool input, bool list = false)
         {
             text = input_text;
@@ -39,6 +46,4 @@ public:
     //load dialogs----------------------------------------------
     void static loadRootText(Dialog::Text&);
     void static loadDialog(Dialog::Text&, Dialog::Text&, string);
-
-    Dialog::Text* pRootDialogAdress;
 };

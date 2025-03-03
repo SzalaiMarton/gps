@@ -1,4 +1,0 @@
-Name the city:
-i
-Define the city size in numbers:
-i
