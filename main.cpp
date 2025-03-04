@@ -1,16 +1,14 @@
 #include "dialog.h"
 #include <typeinfo>
 
-Dialog dialog;
-string response = "";
-
 int main()
 {
+    string input = "";
+    Dialog::initializeCommands();
     do
     {
-        
-
-
-    } while (response != "exit");
+        cin >> input;
+        Dialog::processInput(input);
+    } while (input != "exit");
     return 0;
 }

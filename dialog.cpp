@@ -1,78 +1,52 @@
 #include "dialog.h"
 #include "city.h"
 
-int Dialog::processInput(string response)
+Dialog::Command MainHelp("help", "help");
+Dialog::Command Create("create", "create -h");
+Dialog::Command Edit("edit", "edit -h");
+
+void Dialog::initializeCommands()
 {
-    if (response == "1")
+    Dialog dialog;
+    MainHelp.loadHelpMessage(loadHelpFromFile(dialog.pathToHelp));
+    Create.loadHelpMessage(loadHelpFromFile(dialog.pathToCreate));
+    Edit.loadHelpMessage(loadHelpFromFile(dialog.pathToEdit));
+}
+
+string Dialog::loadHelpFromFile(string path)
+{
+    ifstream file(path);
+    string reValue = "";
+    string text;
+    while(getline(file, text))
     {
-        if (CityParts::cityVector.empty())
-        {
-            return Dialog::CITY_ERROR_MESSAGE;
-        }
-        else
-        {
-            return Dialog::CREATE_STREET_INDEX;
-        }
+        reValue += text + "\n"; 
     }
-    else if (response == "2")
+    file.close();
+    return reValue;
+}
+
+void Dialog::processInput(string input)
+{
+    //handling help commands
+    if(input.find("-h") != string::npos)
     {
-        return Dialog::CREATE_CITY_INDEX;
-    }
-    else if (response == "exit")
-    {
-        return -1;
+        handleHelp(input);
     }
     else
     {
-        return 100;
+        handleCommands(input);
     }
 }
 
-void Dialog::printListElementsToConsole(int currentDialogIndex)
+void Dialog::handleHelp(string input)
 {
-    switch (currentDialogIndex)
-    {
-    case Dialog::CREATE_STREET_INDEX:
-        Dialog::printStreets();
-        break;
-    case Dialog::CREATE_CITY_INDEX:
-        Dialog::printCities();
-        break;
-    default:
-        cout << "Cannot list without index" << endl;
-        return;
-    }
+    if(input == MainHelp.commandName) {MainHelp.printHelp();}
+    else if(input == Create.helpCommand) {Create.printHelp();}
+    else if(input == Edit.helpCommand) {Edit.printHelp();}
 }
 
-void Dialog::printStreets()
+void Dialog::handleCommands(string input)
 {
-    for (auto el : CityParts::streetVector)
-    {
-        cout << el.street_name << endl;
-    }
-}
 
-void Dialog::printCities()
-{
-    for (auto el : CityParts::cityVector)
-    {
-        cout << el.cityName << endl;
-    }
-}
-
-void Dialog::createObject(Dialog::Text* currentDialog, int currentDialogIndex)
-{
-    vector<string> response;
-    for (auto item : currentDialog->nextTexts)
-    {
-        response.push_back(Dialog::writeText(item, currentDialogIndex));
-    }
-    if(currentDialogIndex == Dialog::CREATE_STREET_INDEX)
-    {
-        CityParts::createStreet(response);
-    }
-    else if(currentDialogIndex == Dialog::CREATE_CITY_INDEX)
-    {
-        CityParts::createCity(response);
-    }
 }

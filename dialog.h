@@ -6,44 +6,44 @@
 class Dialog
 {
 public:
+    const string pathToHelp = "commandsHelp//help.txt";
+    const string pathToCreate = "commandsHelp//create.txt";
+    const string pathToEdit = "commandsHelp//edit.txt";
 
-    enum Commands
+    class Command
     {
-        HELP = "help",
-    };
+    private:
+        string help;
+    public:
+        string commandName;
+        string helpCommand;
 
-    const static int CREATE_STREET_INDEX = 0;
-    const static int CREATE_CITY_INDEX = 1;
-    const static int CITY_ERROR_MESSAGE = 2;
-
-    struct Text
-    {
-        vector<Text*> nextTexts;
-        string text;
-        bool needInput;
-        bool listItems;
-
-        Text(string input_text, bool input, bool list = false)
+        Command(string name, string helpCom)
         {
-            text = input_text;
-            needInput = input;
-            listItems = list;
+            this->commandName = name;
+            this->helpCommand = helpCom;
+        }
+
+        void loadHelpMessage(string helpMessage)
+        {
+            this->help = helpMessage;
+        }
+
+        void printHelp()
+        {
+            cout << help << endl;
+        }
+
+        vector<string> sliceCommand(string input)
+        {
+            
         }
     };
 
     //functions-------------------------------------------------
-    string static writeText(Dialog::Text*, int);
-    Dialog::Text* getNextText(Dialog::Text*, int);
-    bool static checkIfDialogIsValid(Dialog::Text*);
-    int static processInput(string response);
-    void static printListElementsToConsole(int);
-    void static printStreets();
-    void static printCities();
-
-    //createing objects-----------------------------------------
-    void static createObject(Dialog::Text*, int);
-
-    //load dialogs----------------------------------------------
-    void static loadRootText(Dialog::Text&);
-    void static loadDialog(Dialog::Text&, Dialog::Text&, string);
+    void static initializeCommands();
+    string static loadHelpFromFile(string path);
+    void static processInput(string input);
+    void static handleHelp(string input);
+    void static handleCommands(string input);
 };

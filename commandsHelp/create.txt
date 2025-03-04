@@ -1,0 +1,1 @@
+To create an object type: create {type} {name}
