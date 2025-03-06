@@ -1,13 +1,14 @@
 #include "dialog.h"
 #include "city.h"
 
-Dialog::Command MainHelp("help", "help");
-Dialog::Command Create("create", "create -h");
-Dialog::Command Edit("edit", "edit -h");
+Dialog dialog;
+
+Dialog::Command MainHelp(dialog.helpCommand,dialog.helpCommand);
+Dialog::Command Create(dialog.createCommand, dialog.createCommand + " -h");
+Dialog::Command Edit(dialog.editCommand, dialog.editCommand + " -h");
 
 void Dialog::initializeCommands()
 {
-    Dialog dialog;
     MainHelp.loadHelpMessage(loadHelpFromFile(dialog.pathToHelp));
     Create.loadHelpMessage(loadHelpFromFile(dialog.pathToCreate));
     Edit.loadHelpMessage(loadHelpFromFile(dialog.pathToEdit));
@@ -49,4 +50,29 @@ void Dialog::handleHelp(string input)
 void Dialog::handleCommands(string input)
 {
 
+}
+
+
+// Command methods--------------------------------------------------
+Dialog::Command::Command(string name, string helpCom)
+{
+    this->commandName = name;
+    this->helpCommand = helpCom;
+}
+
+void Dialog::Command::loadHelpMessage(string helpMessage)
+{
+    this->helpMessage = helpMessage;
+}
+
+void Dialog::Command::printHelp()
+{
+    cout << helpMessage << endl;
+}
+
+vector<string> Dialog::sliceCommand(string input, Command command) //[0] - type, [1] - name
+{
+    int commandInInput = input.find(command.commandName) + command.commandName.length();
+    input = input.substr(commandInInput);
+    return {input};
 }

@@ -4,7 +4,8 @@ final product:
 -from the street vector you can add streets to cities
 -shortest rout finder
 
-
+to do:
+-slicing input needs to be done: substr isnt working as i expected
 
 compile all at once
 to run .\main.exe

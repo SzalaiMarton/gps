@@ -10,6 +10,7 @@
         "xutility": "cpp",
         "typeinfo": "cpp",
         "ostream": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "format": "cpp"
     }
 }

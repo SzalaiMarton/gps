@@ -6,44 +6,32 @@
 class Dialog
 {
 public:
+    const string helpCommand = "help";
+    const string createCommand = "create";
+    const string editCommand = "edit";
+
     const string pathToHelp = "commandsHelp//help.txt";
     const string pathToCreate = "commandsHelp//create.txt";
     const string pathToEdit = "commandsHelp//edit.txt";
-
+   
     class Command
     {
     private:
-        string help;
+        string helpMessage;
     public:
         string commandName;
         string helpCommand;
 
-        Command(string name, string helpCom)
-        {
-            this->commandName = name;
-            this->helpCommand = helpCom;
-        }
-
-        void loadHelpMessage(string helpMessage)
-        {
-            this->help = helpMessage;
-        }
-
-        void printHelp()
-        {
-            cout << help << endl;
-        }
-
-        vector<string> sliceCommand(string input)
-        {
-            
-        }
+        Command(string, string);
+        void loadHelpMessage(string);
+        void printHelp();
     };
 
     //functions-------------------------------------------------
-    void static initializeCommands();
-    string static loadHelpFromFile(string path);
-    void static processInput(string input);
-    void static handleHelp(string input);
-    void static handleCommands(string input);
+    static void initializeCommands();
+    static string loadHelpFromFile(string);
+    static void processInput(string);
+    static void handleHelp(string);
+    static void handleCommands(string);
+    static vector<string> sliceCommand(string, Command); //[0] - type, [1] - name
 };

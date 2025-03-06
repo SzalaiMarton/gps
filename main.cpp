@@ -7,8 +7,9 @@ int main()
     Dialog::initializeCommands();
     do
     {
+        cout << "write" << endl;
         cin >> input;
-        Dialog::processInput(input);
+        //Dialog::processInput(input);
     } while (input != "exit");
     return 0;
 }
