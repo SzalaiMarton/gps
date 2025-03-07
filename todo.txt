@@ -5,7 +5,7 @@ final product:
 -shortest rout finder
 
 to do:
--slicing input needs to be done: substr isnt working as i expected
+-slicing input needs to be done: substr isnt working as i expected - found a better solution for that
 
 compile all at once
 to run .\main.exe

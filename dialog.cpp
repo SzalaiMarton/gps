@@ -72,7 +72,9 @@ void Dialog::Command::printHelp()
 
 vector<string> Dialog::sliceCommand(string input, Command command) //[0] - type, [1] - name
 {
-    int commandInInput = input.find(command.commandName) + command.commandName.length();
-    input = input.substr(commandInInput);
+    cout << "first input: " << input << endl;
+    /*int commandInInput = input.find(command.commandName) + command.commandName.length();
+    input = input.substr(commandInInput);*/
+    cout << "return string: " << input << endl;
     return {input};
 }

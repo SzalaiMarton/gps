@@ -33,5 +33,4 @@ public:
     static void processInput(string);
     static void handleHelp(string);
     static void handleCommands(string);
-    static vector<string> sliceCommand(string, Command); //[0] - type, [1] - name
 };
