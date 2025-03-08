@@ -1,24 +1,28 @@
 #include "dialog.h"
 #include <typeinfo>
-#include <sstream> // Include stringstream for tokenizing
+#include <sstream>
 
 int main()
 {
     string input;
-    vector<string> inputCommand;
+    vector<string> command;
     Dialog::initializeCommands();
     do
     {
         //processing input from user
         getline(cin, input);
-        stringstream temp(input);
-        string token;
-        while (getline(temp, token, ' '))
+        if (input != "exit")
         {
-            inputCommand.push_back(token);
+            stringstream temp(input);
+            string token;
+            while (getline(temp, token, ' '))
+            {
+                command.push_back(token);
+            }
+            Dialog::processInput(command);
+            Dialog::listAllStreets();
         }
-
-        
+        command.clear();
     } while (input != "exit");
     return 0;
 }

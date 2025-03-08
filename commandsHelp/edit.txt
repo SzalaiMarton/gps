@@ -1,1 +1,1 @@
-To edit an object first select the object: edit {type} {name}
+To edit an object first select the object: edit {type}

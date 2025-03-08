@@ -3,15 +3,15 @@
 
 Dialog dialog;
 
-Dialog::Command MainHelp(dialog.helpCommand,dialog.helpCommand);
-Dialog::Command Create(dialog.createCommand, dialog.createCommand + " -h");
-Dialog::Command Edit(dialog.editCommand, dialog.editCommand + " -h");
+Dialog::Command MainHelp(dialog.HELP_COMMAND);
+Dialog::Command Create(dialog.CREATE_COMMAND);
+Dialog::Command Edit(dialog.EDIT_COMMAND);
 
 void Dialog::initializeCommands()
 {
-    MainHelp.loadHelpMessage(loadHelpFromFile(dialog.pathToHelp));
-    Create.loadHelpMessage(loadHelpFromFile(dialog.pathToCreate));
-    Edit.loadHelpMessage(loadHelpFromFile(dialog.pathToEdit));
+    MainHelp.loadHelpMessage(loadHelpFromFile(dialog.PATH_TO_HELP));
+    Create.loadHelpMessage(loadHelpFromFile(dialog.PATH_TO_CREATE));
+    Edit.loadHelpMessage(loadHelpFromFile(dialog.PATH_TO_EDIT));
 }
 
 string Dialog::loadHelpFromFile(string path)
@@ -27,37 +27,109 @@ string Dialog::loadHelpFromFile(string path)
     return reValue;
 }
 
-void Dialog::processInput(string input)
+void Dialog::processInput(vector<string> input)
 {
     //handling help commands
-    if(input.find("-h") != string::npos)
+    for (string el : input)
     {
-        handleHelp(input);
+        if(el == "-h")
+        {
+            handleHelp(input[0]);
+            return;
+        }
     }
-    else
-    {
-        handleCommands(input);
-    }
+    handleCommands(input);
 }
 
 void Dialog::handleHelp(string input)
 {
     if(input == MainHelp.commandName) {MainHelp.printHelp();}
-    else if(input == Create.helpCommand) {Create.printHelp();}
-    else if(input == Edit.helpCommand) {Edit.printHelp();}
+    else if(input == Create.commandName) {Create.printHelp();}
+    else if(input == Edit.commandName) {Edit.printHelp();}
 }
 
-void Dialog::handleCommands(string input)
+void Dialog::handleCommands(vector<string> input)
 {
+    if (input[0] == Create.commandName)
+    {
+        input.erase(input.begin());
+        if (input.size() == 0)
+        {
+            Dialog::errorHandle(Create.commandName);
+            return;
+        }
+        Dialog::handleCreateObjects(input);
+    }
+    else if (input[0] == Edit.commandName)
+    {
+        input.erase(input.begin());
+        if (input.size() == 0)
+        {
+            Dialog::errorHandle(Edit.commandName);
+            return;
+        }
+        Dialog::handleEditObjects(input);
+    }
+}
 
+void Dialog::handleCreateObjects(vector<string> properties)
+{
+    if (properties[0] == "street")
+    {
+        CityParts::createStreet(properties);
+    }
+    else if (properties[0] == "city")
+    {
+        CityParts::createCity(properties);
+    }
+}
+
+void Dialog::handleEditObjects(vector<string> properties)
+{
+    string input;
+    if (properties[0] == "street")
+    {
+        Dialog::listAllStreets();
+    }
+    else if (properties[0] == "city")
+    {
+        Dialog::listAllCities();
+    }
+}
+
+void Dialog::errorHandle(string commandName)
+{
+    if (commandName == Create.commandName)
+    {
+        cout << "Give the object a name: create {type} ->{name}<-" << endl;
+    }
+}
+
+void Dialog::listAllStreets()
+{
+    int index = 0;
+    for (auto street : CityParts::streetVector)
+    {
+        index++;
+        cout << index << " [Street] " << street.streetName << " [Attached To] " << street.city << endl;
+    }
+}
+
+void Dialog::listAllCities()
+{
+    int index = 0;
+    for (auto city : CityParts::cityVector)
+    {
+        index++;
+        cout << index << " [City] " << city.cityName << endl;
+    }
 }
 
 
 // Command methods--------------------------------------------------
-Dialog::Command::Command(string name, string helpCom)
+Dialog::Command::Command(string name)
 {
     this->commandName = name;
-    this->helpCommand = helpCom;
 }
 
 void Dialog::Command::loadHelpMessage(string helpMessage)
@@ -68,13 +140,4 @@ void Dialog::Command::loadHelpMessage(string helpMessage)
 void Dialog::Command::printHelp()
 {
     cout << helpMessage << endl;
-}
-
-vector<string> Dialog::sliceCommand(string input, Command command) //[0] - type, [1] - name
-{
-    cout << "first input: " << input << endl;
-    /*int commandInInput = input.find(command.commandName) + command.commandName.length();
-    input = input.substr(commandInInput);*/
-    cout << "return string: " << input << endl;
-    return {input};
 }
