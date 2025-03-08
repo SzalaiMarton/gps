@@ -1,4 +1,4 @@
-The lost of all commands:
+The list of all commands:
 
 Use -h to get help for each command.
 
@@ -6,3 +6,4 @@ create          used for creating objects
 edit            used for editing objects
 exit            close terminal
 help            list all commands
+list            list an object vector

@@ -20,7 +20,6 @@ int main()
                 command.push_back(token);
             }
             Dialog::processInput(command);
-            Dialog::listAllStreets();
         }
         command.clear();
     } while (input != "exit");

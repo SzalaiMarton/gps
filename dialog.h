@@ -9,10 +9,9 @@ public:
     const string HELP_COMMAND = "help";
     const string CREATE_COMMAND = "create";
     const string EDIT_COMMAND = "edit";
+    const string LIST_COMMAND = "list";
 
     const string PATH_TO_HELP = "commandsHelp//help.txt";
-    const string PATH_TO_CREATE = "commandsHelp//create.txt";
-    const string PATH_TO_EDIT = "commandsHelp//edit.txt";
    
     class Command
     {
@@ -32,7 +31,15 @@ public:
     static void listAllStreets();
     static void listAllCities();
 
-    //command handle---------------------------------------------
+    //list handle-----------------------------------------------
+    static void handleListObject(vector<string>);
+
+    //edit handle-----------------------------------------------
+    static void editStreet(int index);
+    static void editCity(int index);
+    static void listEditActions();
+
+    //command handle--------------------------------------------
     static void processInput(vector<string>);
     static void handleHelp(string);
     static void handleCommands(vector<string>);

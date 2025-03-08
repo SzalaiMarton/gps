@@ -73,6 +73,66 @@ void CityParts::Street::attachToStreet(Street* rootStreet, string side)
     }
 }
 
+void CityParts::Street::listProperties()
+{
+    cout << "[Properties] " << "name: " << this->streetName << endl;
+    cout << "[Properties] " << "length: " << this->length << endl;
+    cout << "[Properties] " << "located in: " << this->city << endl;
+    cout << "[Properties] " << "buildings: " << endl;
+    this->listBuildings();
+    cout << "[Properties] " << "buildings-----------------------------" << endl;
+    cout << "[Properties] " << "connected streets back: " << endl;
+    this->listConnectedStreetsBack();
+    cout << "[Properties] " << "connected streets back----------------" << endl;
+    cout << "[Properties] " << "connected streets front: " << endl;
+    this->listConnectedStreetsFront();
+    cout << "[Properties] " << "connected streets front---------------" << endl;
+}
+
+void CityParts::Street::listBuildings()
+{
+    if (this->buildings.empty() || this->buildings.size() == 0)
+    {
+        cout << "No buildings have been attached." << endl;
+        return;
+    }
+    int index = 0;
+    for (CityParts::Buildings el : this->buildings)
+    {
+        index++;
+        cout << "   " << index << el.buildingName << endl;
+    }
+}
+
+void CityParts::Street::listConnectedStreetsBack()
+{
+    if (this->connectedStreetsBack.empty() || this->connectedStreetsBack.size() == 0)
+    {
+        cout << "No streets have been attached to the back." << endl;
+        return;
+    }
+    int index = 0;
+    for (auto el : this->connectedStreetsBack)
+    {
+        index++;
+        cout << "   " << index << el->streetName << endl;
+    }
+}
+
+void CityParts::Street::listConnectedStreetsFront()
+{
+    if (this->connectedStreetsFront.empty() || this->connectedStreetsFront.size() == 0)
+    {
+        cout << "No streets have been attached to the front." << endl;
+        return;
+    }
+    int index = 0;
+    for (auto el : this->connectedStreetsFront)
+    {
+        index++;
+        cout << "   " << index << el->streetName << endl;
+    }
+}
 
 //CITY FUNCTIONS-----------------------------------------------
 CityParts::City::City(vector<string> properties)
@@ -94,11 +154,6 @@ CityParts::City::City(vector<string> properties)
             break;
         }
     }
-}
-
-void CityParts::City::printPopulation()
-{
-    cout << cityName + "'s population: " + to_string(streets.size());
 }
 
 void CityParts::City::convertPopNumberToDensity()
@@ -123,8 +178,24 @@ void CityParts::City::convertPopNumberToDensity()
 
 void CityParts::City::listStreets()
 {
+    if (this->streets.empty() || this->streets.size() == 0)
+    {
+        cout << "No street have been attached." << endl;
+        return;
+    }
+    int index = 0;
     for(auto street : streets)
     {
-        cout << street->streetName << endl;
+        index++;
+        cout << "   " << index << street->streetName << endl;
     }
+}
+
+void CityParts::City::listProperties()
+{
+    cout << "[Properties] " << "name: " << this->cityName << endl;
+    cout << "[Properties] " << "population: " << this->populationInNumber << " " << CityParts::DensityUtils::toString(this->populationInDensity) << endl;
+    cout << "[Properties] " << "attached streets: " << endl;
+    CityParts::City::listStreets();
+    cout << "[Properties] " << "attached streets----------------------" << endl;
 }

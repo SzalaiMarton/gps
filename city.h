@@ -10,16 +10,32 @@ using namespace std;
 class CityParts
 {
 public:
-    const static int DEAFAULT_POPULATION_SIZE = 0;
-    const static int LIGHT_POPULATION_SIZE = 20;
-    const static int MEDIUM_POPULATION_SIZE = 50;
-    const static int HEAVY_POPULATION_SIZE = 100;
+    const static int LIGHT_POPULATION_SIZE = 2000;
+    const static int MEDIUM_POPULATION_SIZE = 50000;
+    const static int HEAVY_POPULATION_SIZE = 200000;
     
     enum Density
     {
         LIGHT = LIGHT_POPULATION_SIZE,
         MEDIUM = MEDIUM_POPULATION_SIZE,
         HEAVY = HEAVY_POPULATION_SIZE
+    };
+
+    class DensityUtils
+    {
+    public:
+        static string toString(Density density)
+        {
+            switch (density)
+            {
+            case LIGHT:
+                return "Light";
+            case MEDIUM:
+                return "Medium";
+            case HEAVY:
+                return "Heavy";
+            }
+        }
     };
 
     struct Buildings
@@ -29,30 +45,34 @@ public:
 
     struct Street
     {
-        vector<Buildings> buildings;
         string streetName;
         string city;
         int length;
+        vector<Buildings> buildings;
         vector<Street*> connectedStreetsFront;
         vector<Street*> connectedStreetsBack;
 
-        Street(vector<string> properties);
+        Street(vector<string>);
         
         void attachToStreet(Street*, string);
+        void listProperties();
+        void listBuildings();
+        void listConnectedStreetsBack();
+        void listConnectedStreetsFront();
     };
 
     struct City
     {
         string cityName;
-        vector<Street*> streets;
         int populationInNumber;
         Density populationInDensity;
-
+        vector<Street*> streets;
+        
         City(vector<string>);
         
-        void printPopulation();
         void convertPopNumberToDensity();
         void listStreets();
+        void listProperties();
     };
 
     static void createStreet(vector<string>);
