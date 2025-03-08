@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include "funcForDev.cpp"
 
 using namespace std;
@@ -52,6 +53,7 @@ public:
         vector<Street*> connectedStreetsFront;
         vector<Street*> connectedStreetsBack;
 
+        Street();
         Street(vector<string>);
         
         void attachToStreet(Street*, string);
@@ -73,6 +75,10 @@ public:
         void convertPopNumberToDensity();
         void listStreets();
         void listProperties();
+
+        void editName(string);
+        void editPopulation(int);
+        void editStreets();
     };
 
     static void createStreet(vector<string>);

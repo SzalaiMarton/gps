@@ -30,6 +30,7 @@ public:
     static string loadHelpFromFile(string);
     static void listAllStreets();
     static void listAllCities();
+    static vector<string> takeInput();
 
     //list handle-----------------------------------------------
     static void handleListObject(vector<string>);

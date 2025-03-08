@@ -31,7 +31,6 @@ string Dialog::loadHelpFromFile(string path)
 
 void Dialog::processInput(vector<string> input)
 {
-    //handling help commands
     for (string el : input)
     {
         if(el == "-h" || el == "help")
@@ -116,8 +115,9 @@ void Dialog::handleEditObjects(vector<string> properties)
             if (input > CityParts::streetVector.size() - 1)
             {
                 cout << "Street not found." << endl;
+                return;
             }
-        } while (input <= CityParts::streetVector.size() - 1);
+        } while (input > CityParts::streetVector.size() - 1);
         Dialog::editStreet(input);
     }
     else if (properties[0] == "city")
@@ -136,8 +136,9 @@ void Dialog::handleEditObjects(vector<string> properties)
             if (input > CityParts::cityVector.size() - 1)
             {
                 cout << "City not found." << endl;
+                return;
             }
-        } while (input <= CityParts::cityVector.size() - 1);
+        } while (input > CityParts::cityVector.size() - 1);
         Dialog::editCity(input);
     }
 }
@@ -145,15 +146,17 @@ void Dialog::handleEditObjects(vector<string> properties)
 void Dialog::editStreet(int index)
 {
     CityParts::streetVector[index].listProperties();
-    cout << "To edit an element type: {name} {action}" << endl;
+    cout << "To edit an element type: {property} {action}" << endl;
     cout << "To list actions type: edit actions -l" << endl;
+    vector<string> input = Dialog::takeInput();
 }
 
 void Dialog::editCity(int index)
 {
     CityParts::cityVector[index].listProperties();
-    cout << "To edit an element type: {name} {action}" << endl;
+    cout << "To edit an element type: {property} {action}" << endl;
     cout << "To list actions type: edit actions -l" << endl;
+    vector<string> input = Dialog::takeInput();
 }
 
 void Dialog::listEditActions()
@@ -171,7 +174,7 @@ void Dialog::errorHandle(string commandName)
     }
     else if (commandName == Edit.commandName)
     {
-        cout << "Specify the object you want to edit: edit ->{type}<- ->{name}<-" << endl;
+        cout << "Specify the object you want to edit: edit ->{type}<-" << endl;
     }
     else if (commandName == List.commandName)
     {
@@ -197,6 +200,21 @@ void Dialog::listAllCities()
         index++;
         cout << index << " [City] " << city.cityName << endl;
     }
+}
+
+vector<string> Dialog::takeInput()
+{
+    string input;
+    vector<string> command;
+    cout << ":";
+    getline(cin, input);
+    stringstream temp(input);
+    string token;
+    while (getline(temp, token, ' '))
+    {
+        command.push_back(token);
+    }
+    return command;
 }
 
 void Dialog::handleListObject(vector<string> type)

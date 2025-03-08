@@ -9,6 +9,7 @@ void CityParts::createStreet(vector<string> properties)
 {
     CityParts::Street* temp = new CityParts::Street(properties); // [0]-name, [1]-length
     streetVector.push_back(*temp);
+    cout << temp->streetName << " has been created." << endl;
     delete temp;
 }
 
@@ -16,6 +17,7 @@ void CityParts::createCity(vector<string> properties)
 {
     CityParts::City* temp = new CityParts::City(properties); // [0]-name, [1]-density in number
     cityVector.push_back(*temp);
+    cout << temp->cityName << " has been created." << endl;
     delete temp;
 }
 
@@ -44,9 +46,17 @@ bool CityParts::checkForExistingObject(string name, string obj)
     return false;
 }
 
-//STREET FUNCTIONS-----------------------------------------------
+CityParts::Street::Street()
+{
+    this->streetName = "default";
+    this->length = 0;
+    this->city = "None";
+}
+
+// STREET FUNCTIONS-----------------------------------------------
 CityParts::Street::Street(vector<string> properties)
 {
+    CityParts::Street();
     for (int index = 0; index < properties.size(); index++)
     {
         switch (index)
@@ -198,4 +208,20 @@ void CityParts::City::listProperties()
     cout << "[Properties] " << "attached streets: " << endl;
     CityParts::City::listStreets();
     cout << "[Properties] " << "attached streets----------------------" << endl;
+}
+
+void CityParts::City::editName(string name)
+{
+    this->cityName = name;
+}
+
+void CityParts::City::editPopulation(int number)
+{
+    this->populationInNumber = number;
+}
+
+void CityParts::City::editStreets()
+{
+    //list available streets
+    //take input then to add street or remove
 }
