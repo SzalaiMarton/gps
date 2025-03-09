@@ -6,11 +6,6 @@
 class Dialog
 {
 public:
-    const string HELP_COMMAND = "help";
-    const string CREATE_COMMAND = "create";
-    const string EDIT_COMMAND = "edit";
-    const string LIST_COMMAND = "list";
-
     const string PATH_TO_HELP = "commandsHelp//help.txt";
    
     class Command
@@ -30,12 +25,14 @@ public:
     static string loadHelpFromFile(string);
     static void listAllStreets();
     static void listAllCities();
-    static vector<string> takeInput();
+    static vector<string> takeInput(string c = "none");
+    static void invalidInputMessage();
 
     //list handle-----------------------------------------------
     static void handleListObject(vector<string>);
 
     //edit handle-----------------------------------------------
+    static void handleEditObjects(vector<string>);
     static void editStreet(int index);
     static void editCity(int index);
     static void listEditActions();
@@ -45,6 +42,5 @@ public:
     static void handleHelp(string);
     static void handleCommands(vector<string>);
     static void handleCreateObjects(vector<string>);
-    static void handleEditObjects(vector<string>);
     static void errorHandle(string);
 };

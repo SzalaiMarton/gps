@@ -2,16 +2,16 @@
 
 int main()
 {
-    vector<string> command;
+    vector<string> commands;
     Dialog::initializeCommands();
     do
     {
-        Dialog::takeInput();
-        if (command[0] != "exit")
+        commands = Dialog::takeInput();
+        if (commands[0] != "exit")
         {
-            Dialog::processInput(command);
+            Dialog::processInput(commands);
         }
-        command.clear();
-    } while (command[0] != "exit");
+        commands.clear();
+    } while (commands[0] != "exit");
     return 0;
 }

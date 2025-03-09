@@ -1,13 +1,18 @@
 #include "city.h"
+#include "commands.h"
 
 vector<CityParts::City> CityParts::cityVector;
 vector<CityParts::Street> CityParts::streetVector;
 
-
 //FUNCTIONS-------------------------------------------------------
 void CityParts::createStreet(vector<string> properties)
 {
-    CityParts::Street* temp = new CityParts::Street(properties); // [0]-name, [1]-length
+    if (properties[1].size() == 2)
+    {
+        cout << "Invalid name, it should be 3 characters long" << endl;
+        return;
+    }
+    CityParts::Street* temp = new CityParts::Street(properties); // [1]-name, [2]-length
     streetVector.push_back(*temp);
     cout << temp->streetName << " has been created." << endl;
     delete temp;
@@ -15,7 +20,17 @@ void CityParts::createStreet(vector<string> properties)
 
 void CityParts::createCity(vector<string> properties)
 {
-    CityParts::City* temp = new CityParts::City(properties); // [0]-name, [1]-density in number
+    if (properties[1].size() == 2)
+    {
+        cout << "Invalid name, it should be 3 characters long" << endl;
+        return;
+    }
+    if (CityParts::checkForExistingObject(properties[1], "city"))
+    {
+        cout << "City already exist." << endl;
+        return;
+    }
+    CityParts::City* temp = new CityParts::City(properties); // [1]-name, [2]-density in number
     cityVector.push_back(*temp);
     cout << temp->cityName << " has been created." << endl;
     delete temp;
@@ -46,17 +61,21 @@ bool CityParts::checkForExistingObject(string name, string obj)
     return false;
 }
 
-CityParts::Street::Street()
+bool CityParts::checkIfStreetInCityAlready(string targetName, string cityName)
 {
-    this->streetName = "default";
-    this->length = 0;
-    this->city = "None";
+    for (auto street : CityParts::streetVector)
+    {
+        if (street.streetName == targetName && street.city == cityName)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 // STREET FUNCTIONS-----------------------------------------------
 CityParts::Street::Street(vector<string> properties)
 {
-    CityParts::Street();
     for (int index = 0; index < properties.size(); index++)
     {
         switch (index)
@@ -85,16 +104,16 @@ void CityParts::Street::attachToStreet(Street* rootStreet, string side)
 
 void CityParts::Street::listProperties()
 {
-    cout << "[Properties] " << "name: " << this->streetName << endl;
-    cout << "[Properties] " << "length: " << this->length << endl;
-    cout << "[Properties] " << "located in: " << this->city << endl;
-    cout << "[Properties] " << "buildings: " << endl;
+    cout << "[Properties] " << "name(name): " << this->streetName << endl;
+    cout << "[Properties] " << "length(length): " << this->length << endl;
+    cout << "[Properties] " << "located in(city): " << this->city << endl;
+    cout << "[Properties] " << "buildings(buildings): " << endl;
     this->listBuildings();
     cout << "[Properties] " << "buildings-----------------------------" << endl;
-    cout << "[Properties] " << "connected streets back: " << endl;
+    cout << "[Properties] " << "connected streets back(sback): " << endl;
     this->listConnectedStreetsBack();
     cout << "[Properties] " << "connected streets back----------------" << endl;
-    cout << "[Properties] " << "connected streets front: " << endl;
+    cout << "[Properties] " << "connected streets front(sfront): " << endl;
     this->listConnectedStreetsFront();
     cout << "[Properties] " << "connected streets front---------------" << endl;
 }
@@ -144,7 +163,141 @@ void CityParts::Street::listConnectedStreetsFront()
     }
 }
 
-//CITY FUNCTIONS-----------------------------------------------
+void CityParts::Street::editName()
+{
+    string name;
+    do
+    {
+        cout << "To quit editing type: exit" << endl;
+        cout << "New value: ";
+        cin >> name;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (!CityParts::checkIfStreetInCityAlready(name, this->city))
+        {
+            this->streetName = name;
+            cout << "Name has been changed" << endl;
+            return;
+        }
+        else
+        {
+            cout << "Street already exist in this city" << endl;
+        }
+    } while(name != "exit");
+}
+
+void CityParts::Street::editLength()
+{
+    string number;
+    do
+    {
+        cout << "To quit editing type: exit" << endl;
+        cout << "New value: ";
+        cin >> number;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (stoi(number) >= 0)
+        {
+            this->length = stoi(number);
+            cout << "Length has been changed" << endl;
+            return;
+        }
+        else
+        {
+            cout << "Invalid input, it has to be a number which is positive" << endl;;
+        }
+    } while(number != "exit");
+}
+
+void CityParts::Street::editCity()
+{
+    string name;
+    do
+    {
+        cout << "To quit editing type: exit" << endl;
+        cout << "New value: ";
+        cin >> name;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (CityParts::checkForExistingObject(name, "city"))
+        {
+            this->city = name;
+            cout << "City has been changed" << endl;
+            return;
+        }
+        else
+        {
+            cout << "City doesn't exist" << endl;
+        }
+    } while(name != "exit");
+}
+
+void CityParts::Street::editBuildings(string action, CityParts::Buildings target)
+{
+    Commands command;
+    if (action == command.EDIT_DELETE_COMMAND)
+    {
+        for (int index = 0; index < this->buildings.size(); index++)
+        {
+            if (this->buildings[index].buildingName == target.buildingName)
+            {
+                this->buildings.erase(this->buildings.begin() + index);
+                cout << "Building successfully deleted." << endl;
+                return;
+            }
+        }
+    }
+    else if (action == command.EDIT_APPEND_COMMAND)
+    {
+        this->buildings.push_back(target);
+    }
+}
+
+void CityParts::Street::editConnectedStreetsBack(string action, CityParts::Street* target)
+{
+    Commands command;
+    if (action == command.EDIT_DELETE_COMMAND)
+    {
+        for (int index = 0; index < this->connectedStreetsBack.size(); index++)
+        {
+            if (this->connectedStreetsBack[index]->streetName == target->streetName)
+            {
+                this->connectedStreetsBack.erase(this->connectedStreetsBack.begin() + index);
+                cout << "Street successfully deleted." << endl;
+                return;
+            }
+        }
+    }
+    else if (action == command.EDIT_APPEND_COMMAND)
+    {
+        this->connectedStreetsBack.push_back(target);
+    }
+}
+
+void CityParts::Street::editConnectedStreetsFront(string action, CityParts::Street* target)
+{
+    Commands command;
+    if (action == command.EDIT_DELETE_COMMAND)
+    {
+        for (int index = 0; index < this->connectedStreetsFront.size(); index++)
+        {
+            if (this->connectedStreetsFront[index]->streetName == target->streetName)
+            {
+                this->connectedStreetsFront.erase(this->connectedStreetsFront.begin() + index);
+                cout << "Street successfully deleted." << endl;
+                return;
+            }
+        }
+    }
+    else if (action == command.EDIT_APPEND_COMMAND)
+    {
+        this->connectedStreetsFront.push_back(target);
+    }
+}
+
+void CityParts::Street::deleteCity()
+{
+    this->city = "None";
+}
+
+// CITY FUNCTIONS-----------------------------------------------
 CityParts::City::City(vector<string> properties)
 {
     for (int index = 0; index < properties.size(); index++)
@@ -152,11 +305,6 @@ CityParts::City::City(vector<string> properties)
         switch (index)
         {
         case 1:
-            if (CityParts::checkForExistingObject(properties[index], "city"))
-            {
-                cout << "City already exist." << endl;
-                return;
-            }
             cityName = properties[index];
             break;
         case 2:
@@ -203,25 +351,59 @@ void CityParts::City::listStreets()
 
 void CityParts::City::listProperties()
 {
-    cout << "[Properties] " << "name: " << this->cityName << endl;
-    cout << "[Properties] " << "population: " << this->populationInNumber << " " << CityParts::DensityUtils::toString(this->populationInDensity) << endl;
-    cout << "[Properties] " << "attached streets: " << endl;
+    cout << "[Properties] " << "name(name): " << this->cityName << endl;
+    cout << "[Properties] " << "population(population): " << this->populationInNumber << " " << CityParts::DensityUtils::toString(this->populationInDensity) << endl;
+    cout << "[Properties] " << "attached streets(streets): " << endl;
     CityParts::City::listStreets();
     cout << "[Properties] " << "attached streets----------------------" << endl;
 }
 
-void CityParts::City::editName(string name)
+void CityParts::City::editName()
 {
-    this->cityName = name;
+    string name;
+    do
+    {
+        cout << "To quit editing type: exit" << endl;;
+        cout << "New value: ";
+        cin >> name;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (!CityParts::checkForExistingObject(name, "city"))
+        {
+            this->cityName = name;
+            cout << "Name has been changed" << endl;
+            return;
+        }
+        else
+        {
+            cout << "City already exist" << endl;
+        }
+    } while(name != "exit");
 }
 
-void CityParts::City::editPopulation(int number)
+void CityParts::City::editPopulation()
 {
-    this->populationInNumber = number;
+    string number;
+    do
+    {
+        cout << "To quit editing type: exit" << endl;;
+        cout << "New value: ";
+        cin >> number;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if (stoi(number) >= 0)
+        {
+            this->populationInNumber = stoi(number);
+            cout << "Population has been changed" << endl;
+            this->convertPopNumberToDensity();
+            return;
+        }
+        else
+        {
+            cout << "Invalid input, it has to be a number which is positive" << endl;;
+        }
+    } while(number != "exit");
 }
 
-void CityParts::City::editStreets()
+void CityParts::City::editStreets(string action)
 {
-    //list available streets
     //take input then to add street or remove
 }

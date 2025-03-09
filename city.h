@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include "funcForDev.cpp"
+#include <limits>
 
 using namespace std;
 
@@ -46,14 +47,13 @@ public:
 
     struct Street
     {
-        string streetName;
-        string city;
-        int length;
+        string streetName = "default";
+        string city = "None";
+        int length = 0;
         vector<Buildings> buildings;
         vector<Street*> connectedStreetsFront;
         vector<Street*> connectedStreetsBack;
 
-        Street();
         Street(vector<string>);
         
         void attachToStreet(Street*, string);
@@ -61,13 +61,22 @@ public:
         void listBuildings();
         void listConnectedStreetsBack();
         void listConnectedStreetsFront();
+
+        void editName();
+        void editLength();
+        void editCity();
+        void editBuildings(string, CityParts::Buildings);
+        void editConnectedStreetsBack(string, CityParts::Street*);
+        void editConnectedStreetsFront(string, CityParts::Street*);
+
+        void deleteCity();
     };
 
     struct City
     {
-        string cityName;
-        int populationInNumber;
-        Density populationInDensity;
+        string cityName = "default";
+        int populationInNumber = 0;
+        Density populationInDensity = LIGHT;
         vector<Street*> streets;
         
         City(vector<string>);
@@ -76,15 +85,16 @@ public:
         void listStreets();
         void listProperties();
 
-        void editName(string);
-        void editPopulation(int);
-        void editStreets();
+        void editName();
+        void editPopulation();
+        void editStreets(string);
     };
 
     static void createStreet(vector<string>);
     static void createCity(vector<string>);
 
     static bool checkForExistingObject(string, string);
+    static bool checkIfStreetInCityAlready(string, string);
 
     static vector<CityParts::City> cityVector;
     static vector<CityParts::Street> streetVector;

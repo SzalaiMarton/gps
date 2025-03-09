@@ -1,12 +1,14 @@
 #include "dialog.h"
 #include "city.h"
+#include "commands.h"
 
+Commands command;
 Dialog dialog;
 
-Dialog::Command MainHelp(dialog.HELP_COMMAND);
-Dialog::Command Create(dialog.CREATE_COMMAND);
-Dialog::Command Edit(dialog.EDIT_COMMAND);
-Dialog::Command List(dialog.LIST_COMMAND);
+Dialog::Command MainHelp(command.HELP_COMMAND);
+Dialog::Command Create(command.CREATE_COMMAND);
+Dialog::Command Edit(command.EDIT_COMMAND);
+Dialog::Command List(command.LIST_COMMAND);
 
 void Dialog::initializeCommands()
 {
@@ -82,6 +84,10 @@ void Dialog::handleCommands(vector<string> input)
         }
         Dialog::handleListObject(input);
     }
+    else
+    {
+        Dialog::invalidInputMessage();
+    }
 }
 
 void Dialog::handleCreateObjects(vector<string> properties)
@@ -94,11 +100,15 @@ void Dialog::handleCreateObjects(vector<string> properties)
     {
         CityParts::createCity(properties);
     }
+    else
+    {
+        Dialog::invalidInputMessage();
+    }
 }
 
 void Dialog::handleEditObjects(vector<string> properties)
 {
-    int input;
+    vector<string> input;
     if (properties[0] == "street")
     {
         if (CityParts::streetVector.empty() || CityParts::streetVector.size() == 0)
@@ -107,18 +117,20 @@ void Dialog::handleEditObjects(vector<string> properties)
             return;
         }
         Dialog::listAllStreets();
-        cout << "Type in the index of the street you want to edit: ";
         do
         {
-            cin >> input;
-            input--;
-            if (input > CityParts::streetVector.size() - 1)
+            input = Dialog::takeInput("Type in the index of the street you want to edit: ");
+            if (input.size() != 1)
+            {
+                input.clear();
+            }
+            if (stoi(input[0]) - 1 > CityParts::streetVector.size() - 1)
             {
                 cout << "Street not found." << endl;
                 return;
             }
-        } while (input > CityParts::streetVector.size() - 1);
-        Dialog::editStreet(input);
+        } while (stoi(input[0]) - 1 > CityParts::streetVector.size() - 1);
+        Dialog::editStreet(stoi(input[0]) - 1);
     }
     else if (properties[0] == "city")
     {
@@ -128,18 +140,20 @@ void Dialog::handleEditObjects(vector<string> properties)
             return;
         }
         Dialog::listAllCities();
-        cout << "Type in the index of the city you want to edit: ";
         do
         {
-            cin >> input;
-            input--;
-            if (input > CityParts::cityVector.size() - 1)
+            input = Dialog::takeInput("Type in the index of the street you want to edit: ");
+            if (stoi(input[0]) - 1 > CityParts::cityVector.size() - 1)
             {
                 cout << "City not found." << endl;
                 return;
             }
-        } while (input > CityParts::cityVector.size() - 1);
-        Dialog::editCity(input);
+        } while (stoi(input[0]) - 1 > CityParts::cityVector.size() - 1);
+        Dialog::editCity(stoi(input[0]) - 1);
+    }
+    else
+    {
+        Dialog::invalidInputMessage();
     }
 }
 
@@ -148,7 +162,70 @@ void Dialog::editStreet(int index)
     CityParts::streetVector[index].listProperties();
     cout << "To edit an element type: {property} {action}" << endl;
     cout << "To list actions type: edit actions -l" << endl;
-    vector<string> input = Dialog::takeInput();
+    cout << "To quit editing type: edit quit" << endl;
+    vector<string> input;
+    do
+    {
+        input = Dialog::takeInput();
+        if (input[0] == "edit" && input[1] == "actions" && input[2] == "-l")
+        {
+            Dialog::listEditActions();
+            continue;
+        }
+        if (input[0] == command.EDIT_STREET_NAME)
+        {
+            if (input[1] == command.EDIT_CHANGE_COMMAND)
+            {
+                CityParts::streetVector[index].editName();
+                return;
+            }
+            else if (input[1] == command.EDIT_DELETE_COMMAND)
+            {
+                cout << "Command cannot be used on this property" << endl;
+            }
+        }
+        else if (input[0] == command.EDIT_STREET_LENGTH)
+        {
+            if (input[1] == command.EDIT_CHANGE_COMMAND)
+            {
+                CityParts::streetVector[index].editLength();
+                return;
+            }
+            else if (input[1] == command.EDIT_DELETE_COMMAND)
+            {
+                cout << "Command cannot be used on this property" << endl;
+            }
+        }
+        else if (input[0] == command.EDIT_STREET_CITY)
+        {
+            if (input[1] == command.EDIT_CHANGE_COMMAND)
+            {
+                CityParts::streetVector[index].editCity();
+                return;
+            }
+            else if (input[1] == command.EDIT_DELETE_COMMAND)
+            {
+                CityParts::streetVector[index].deleteCity();
+                return;
+            }
+        }
+        else if (input[0] == command.EDIT_STREET_BUILDINGS)
+        {
+            //CityParts::streetVector[index].editBuildings();
+            cout << "not finished yet" << endl;
+        }
+        else if (input[0] == command.EDIT_STREET_STREETS_BACK)
+        {
+            //CityParts::streetVector[index].editConnectedStreetsBack();
+            cout << "not finished yet" << endl;
+        }
+        else if (input[0] == command.EDIT_STREET_STREETS_FRONT)
+        {
+            //CityParts::streetVector[index].editConnectedStreetsFront();
+            cout << "not finished yet" << endl;
+        }
+        input.clear();
+    } while (input[0] != "edit" && input[1] != "exit");
 }
 
 void Dialog::editCity(int index)
@@ -156,14 +233,54 @@ void Dialog::editCity(int index)
     CityParts::cityVector[index].listProperties();
     cout << "To edit an element type: {property} {action}" << endl;
     cout << "To list actions type: edit actions -l" << endl;
-    vector<string> input = Dialog::takeInput();
+    cout << "To quit editing type: edit quit" << endl;
+    vector<string> input;
+    do
+    {
+        input = Dialog::takeInput();
+        if (input[0] == "edit" && input[1] == "actions" && input[2] == "-l")
+        {
+            Dialog::listEditActions();
+            continue;
+        }
+        else if (input[0] == command.EDIT_CITY_NAME)
+        {
+            if (input[1] == command.EDIT_CHANGE_COMMAND)
+            {
+                CityParts::cityVector[index].editName();
+                return;
+            }
+            else if (input[1] == command.EDIT_DELETE_COMMAND)
+            {
+                cout << "Command cannot be used on this property" << endl;
+            }
+        }
+        else if (input[0] == command.EDIT_CITY_POPULATION)
+        {
+            if (input[1] == command.EDIT_CHANGE_COMMAND)
+            {
+                CityParts::cityVector[index].editPopulation();
+                return;
+            }
+            else if (input[1] == command.EDIT_DELETE_COMMAND)
+            {
+                cout << "Command cannot be used on this property" << endl;
+            }
+        }
+        else if (input[0] == command.EDIT_CITY_STREETS)
+        {
+            //CityParts::cityVector[index].editStreets();
+            cout << "not finished yet" << endl;
+        }
+        input.clear();
+    } while (input[0] != "edit" && input[1] != "exit");
 }
 
 void Dialog::listEditActions()
 {
-    cout << "delete " << "      " << "deletes the property's value" << endl;
-    cout << "edit   " << "      " << "changes the property's value (don't work on vectors)" << endl;
-    cout << "append " << "      " << "append an element to vectors (don't work on single value properties)" << endl;
+    cout << command.EDIT_DELETE_COMMAND << "      " << "deletes the property's value (cannot use on single value beside street->city)" << endl;
+    cout << command.EDIT_CHANGE_COMMAND << "      " << "changes the property's value (don't work on vectors)" << endl;
+    cout << command.EDIT_APPEND_COMMAND << "      " << "append an element to vectors (don't work on single value properties)" << endl;
 }
 
 void Dialog::errorHandle(string commandName)
@@ -202,11 +319,18 @@ void Dialog::listAllCities()
     }
 }
 
-vector<string> Dialog::takeInput()
+vector<string> Dialog::takeInput(string customText)
 {
     string input;
     vector<string> command;
-    cout << ":";
+    if (customText == "none")
+    {
+        cout << ":";
+    }
+    else
+    {
+        cout << customText;
+    }
     getline(cin, input);
     stringstream temp(input);
     string token;
@@ -215,6 +339,12 @@ vector<string> Dialog::takeInput()
         command.push_back(token);
     }
     return command;
+}
+
+void Dialog::invalidInputMessage()
+{
+    cout << "Unknown command." << endl;
+    return;
 }
 
 void Dialog::handleListObject(vector<string> type)
@@ -240,6 +370,10 @@ void Dialog::handleListObject(vector<string> type)
         {
             Dialog::listAllCities();
         }
+    }
+    else
+    {
+        Dialog::invalidInputMessage();
     }
 }
 

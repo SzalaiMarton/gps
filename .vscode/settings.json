@@ -12,6 +12,8 @@
         "ostream": "cpp",
         "iosfwd": "cpp",
         "format": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "system_error": "cpp",
+        "xlocale": "cpp"
     }
 }
