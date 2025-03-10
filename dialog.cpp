@@ -184,18 +184,6 @@ void Dialog::editStreet(int index)
                 cout << "Command cannot be used on this property" << endl;
             }
         }
-        else if (input[0] == command.EDIT_STREET_LENGTH)
-        {
-            if (input[1] == command.EDIT_CHANGE_COMMAND)
-            {
-                CityParts::streetVector[index].editLength();
-                return;
-            }
-            else if (input[1] == command.EDIT_DELETE_COMMAND)
-            {
-                cout << "Command cannot be used on this property" << endl;
-            }
-        }
         else if (input[0] == command.EDIT_STREET_CITY)
         {
             if (input[1] == command.EDIT_CHANGE_COMMAND)
@@ -248,18 +236,6 @@ void Dialog::editCity(int index)
             if (input[1] == command.EDIT_CHANGE_COMMAND)
             {
                 CityParts::cityVector[index].editName();
-                return;
-            }
-            else if (input[1] == command.EDIT_DELETE_COMMAND)
-            {
-                cout << "Command cannot be used on this property" << endl;
-            }
-        }
-        else if (input[0] == command.EDIT_CITY_POPULATION)
-        {
-            if (input[1] == command.EDIT_CHANGE_COMMAND)
-            {
-                CityParts::cityVector[index].editPopulation();
                 return;
             }
             else if (input[1] == command.EDIT_DELETE_COMMAND)

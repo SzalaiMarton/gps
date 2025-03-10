@@ -8,11 +8,9 @@ class Commands
 {
 public:
     const string EDIT_CITY_NAME = "name";
-    const string EDIT_CITY_POPULATION = "population";
     const string EDIT_CITY_STREETS = "streets";
 
     const string EDIT_STREET_NAME = "name";
-    const string EDIT_STREET_LENGTH = "length";
     const string EDIT_STREET_CITY = "city";
     const string EDIT_STREET_BUILDINGS = "buildings";
     const string EDIT_STREET_STREETS_BACK = "sback";
