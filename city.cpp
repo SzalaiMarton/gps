@@ -6,17 +6,17 @@ vector<CityParts::City> CityParts::cityVector;
 vector<CityParts::Street> CityParts::streetVector;
 
 //FUNCTIONS-------------------------------------------------------
-void CityParts::createStreet(vector<string> properties)
+CityParts::Street* CityParts::createStreet(vector<string> properties)
 {
     if (properties[1].size() == 2)
     {
         cout << "Invalid name, it should be 3 characters long" << endl;
         return;
     }
-    CityParts::Street* temp = new CityParts::Street(properties); // [1]-name, [2]-length
+    CityParts::Street* temp = new CityParts::Street(properties); // [1]-name
     streetVector.push_back(*temp);
     cout << temp->streetName << " has been created." << endl;
-    delete temp;
+    return temp;
 }
 
 void CityParts::createCity(vector<string> properties)
@@ -31,24 +31,20 @@ void CityParts::createCity(vector<string> properties)
         cout << "City already exist." << endl;
         return;
     }
-    CityParts::City* temp = new CityParts::City(properties); // [1]-name, [2]-density in number
+    CityParts::City* temp = new CityParts::City(properties); // [1]-name
     cityVector.push_back(*temp);
     cout << temp->cityName << " has been created." << endl;
     delete temp;
 }
 
-CityParts::Street* CityParts::generateRandomStreet(string cityName, vector<string> &randomNames)
+string CityParts::pickRandomName(vector<string> &randomNames)
 {
+    //getting random name vector
     int nameIndex = rand() % randomNames.size();
     string streetName = randomNames[nameIndex];
+    //erasing used name from vector
     randomNames.erase(randomNames.begin() + nameIndex);
-    CityParts::Street* temp = new CityParts::Street({streetName});
-    temp->city = cityName;
-    streetVector.push_back(*temp);
-    cout << temp->streetName << " has been created." << endl;
-    Street* returnTemp = temp;
-    delete temp;
-    return returnTemp;
+    return streetName;
 }
 
 vector<string> CityParts::randomNameGenerator()
@@ -65,59 +61,72 @@ vector<string> CityParts::randomNameGenerator()
     return names;
 }
 
-void CityParts::generateRandomCity(string cityName, int numberOfStreets, int maxConnectedStreet)
+void CityParts::generateCityForWeb(string cityName, int numberOfStreets, int maxConnectedStreet)
 {
     //recommended number of streets is 50;
-    vector<string> randomNames = CityParts::randomNameGenerator();
-    CityParts::City* temp = new CityParts::City({cityName});
-    cityVector.push_back(*temp);
-    cout << temp->cityName << " city has been created." << endl;
-    delete temp;
+    vector<string> randomNames = CityParts::randomNameGenerator(); //get random names vector for streets
+    CityParts::createCity({cityName}); //create city
     if (maxConnectedStreet < 2)
     {
         cout << "Invalid number of connected streets." << endl;
         return;
     }
-    int cityIndex = getCityIndex(cityName);
+    int currentCityIndex = getCityIndex(cityName);
 
-    //create a street then attach maxConnectedStreet - 1 to it and then attach each streets to eachothers connected back
-    //so it is always creates a crossroad
-    vector<Street*> unfinishedStreets;
+    //create a street then attach maxConnectedStreet - 1 ammount of streets to it and then attach each streets to eachothers connected back
+    //so it is always create a crossroad
+
+    vector<Street*> unfinishedStreets; //streets that still needs streets to their back or front
     for (int index = 0; index < numberOfStreets; index++)
     {
-        unfinishedStreets.push_back(CityParts::generateRandomStreet(cityName, randomNames));
-        for (auto street : unfinishedStreets)
+        if (!unfinishedStreets.empty())
         {
-            if (street->connectedStreetsBack.size() < maxConnectedStreet)
+            
+        }
+        else
+        {
+            CityParts::Street* rootStreet = CityParts::createStreet({CityParts::pickRandomName(randomNames)});
+            CityParts::cityVector[currentCityIndex].streets.push_back(rootStreet);
+            for (int index = 0; index < maxConnectedStreet; index++) // back
             {
-                //creating streets
-                Street* tempStreet1 = CityParts::generateRandomStreet(cityName, randomNames);
-                Street* tempStreet2 = CityParts::generateRandomStreet(cityName, randomNames);
-                Street* tempStreet3 = CityParts::generateRandomStreet(cityName, randomNames);
-                //connecting streets to eachother
-                street->attachStreet(tempStreet1, "back");
-                street->attachStreet(tempStreet2, "back");
-                street->attachStreet(tempStreet3, "back");
-                
-                tempStreet1->attachStreet(street, "front");
-                tempStreet1->attachStreet(tempStreet2, "front");
-                tempStreet1->attachStreet(tempStreet3, "front");
+                CityParts::generateStreet(rootStreet, unfinishedStreets, randomNames, "back");
+            }
+            for (int index = 0; index < maxConnectedStreet; index++) // front
+            {
+                CityParts::generateStreet(rootStreet, unfinishedStreets, randomNames, "front");
+            }
+        }
+    }
+}
 
-                tempStreet2->attachStreet(street, "front");
-                tempStreet2->attachStreet(tempStreet1, "front");
-                tempStreet2->attachStreet(tempStreet3, "front");
-
-                tempStreet3->attachStreet(street, "front");
-                tempStreet3->attachStreet(tempStreet1, "front");
-                tempStreet3->attachStreet(tempStreet2, "front");
-                //pushing streets to the vector
-                streetVector.push_back(*tempStreet1);
-                streetVector.push_back(*tempStreet2);
-                streetVector.push_back(*tempStreet3);
-                //deleting temp streets
-                delete tempStreet1;
-                delete tempStreet2;
-                delete tempStreet3;
+void CityParts::generateStreet(CityParts::Street* rootStreet, vector<CityParts::Street*> &unfinishedStreets, vector<string> randomNames, string side)
+{
+    string opposingSide;
+    if (side == "front")
+    {
+        opposingSide = "back";
+    }
+    else
+    {
+        opposingSide = "front";
+    }
+    //creating temporary street
+    vector<Street*> tempStoredStreets;
+    tempStoredStreets.push_back(rootStreet);
+    CityParts::Street* temporaryStreet = CityParts::createStreet({CityParts::pickRandomName(randomNames)});
+    rootStreet->attachStreet(temporaryStreet, side);
+    unfinishedStreets.push_back(temporaryStreet);
+    tempStoredStreets.push_back(temporaryStreet);
+    delete temporaryStreet;
+    //connecting to eachothers
+    for (auto rootS : tempStoredStreets)
+    {
+        for (auto s : tempStoredStreets)
+        {
+            if (s == rootS) {continue;}
+            else
+            {
+                rootS->attachStreet(s, opposingSide);
             }
         }
     }

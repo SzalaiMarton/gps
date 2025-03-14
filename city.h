@@ -56,11 +56,13 @@ public:
         void editStreets(string);
     };
 
-    static void createStreet(vector<string>);
+    static Street* createStreet(vector<string>);
     static void createCity(vector<string>);
-    static Street* generateRandomStreet(string, vector<string>&);
+
+    static string pickRandomName(vector<string> &randomNames);
     static vector<string> randomNameGenerator();
-    static void generateRandomCity(string, int, int);
+    static void generateCityForWeb(string, int, int); //creates a city then adds streets to it
+    static void generateStreet(CityParts::Street*, vector<::CityParts::Street*>&, vector<string>, string); //generate a street with a root and attach given number of streets to it
 
     static bool checkForExistingObject(string, string);
     static bool checkIfStreetInCityAlready(string, string);
