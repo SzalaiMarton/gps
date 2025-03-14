@@ -63,7 +63,7 @@ vector<string> CityParts::randomNameGenerator()
 
 void CityParts::generateCityForWeb(string cityName, int numberOfStreets, int maxConnectedStreet)
 {
-    //recommended number of streets is 50;
+    //recommended number of streets is 50
     vector<string> randomNames = CityParts::randomNameGenerator(); //get random names vector for streets
     CityParts::createCity({cityName}); //create city
     if (maxConnectedStreet < 2)
@@ -76,24 +76,39 @@ void CityParts::generateCityForWeb(string cityName, int numberOfStreets, int max
     //create a street then attach maxConnectedStreet - 1 ammount of streets to it and then attach each streets to eachothers connected back
     //so it is always create a crossroad
 
+    // initial street creations -> these streets are added to unfinishedStreets exept rootStreet
+    int streetsToBeSubtracted = 1;
     vector<Street*> unfinishedStreets; //streets that still needs streets to their back or front
-    for (int index = 0; index < numberOfStreets; index++)
+    CityParts::Street* rootStreet = CityParts::createStreet({CityParts::pickRandomName(randomNames)});
+    CityParts::cityVector[currentCityIndex].streets.push_back(rootStreet);
+    for (int index = 0; index < maxConnectedStreet; index++) // back
     {
-        if (!unfinishedStreets.empty())
+        CityParts::generateStreet(rootStreet, unfinishedStreets, randomNames, "back");
+        streetsToBeSubtracted++;
+    }
+    for (int index = 0; index < maxConnectedStreet; index++) // front
+    {
+        CityParts::generateStreet(rootStreet, unfinishedStreets, randomNames, "front");
+        streetsToBeSubtracted++;
+    }
+    numberOfStreets -= streetsToBeSubtracted;
+    while (numberOfStreets != 0)
+    {
+        for (int unfinisedIndex = 0; unfinisedIndex < unfinishedStreets.size(); unfinisedIndex++)
         {
-            
-        }
-        else
-        {
-            CityParts::Street* rootStreet = CityParts::createStreet({CityParts::pickRandomName(randomNames)});
-            CityParts::cityVector[currentCityIndex].streets.push_back(rootStreet);
-            for (int index = 0; index < maxConnectedStreet; index++) // back
+            if (numberOfStreets == 0)
             {
-                CityParts::generateStreet(rootStreet, unfinishedStreets, randomNames, "back");
+                break;
             }
-            for (int index = 0; index < maxConnectedStreet; index++) // front
+            if (unfinishedStreets[unfinisedIndex]->connectedStreetsBack.size() < maxConnectedStreet)
             {
-                CityParts::generateStreet(rootStreet, unfinishedStreets, randomNames, "front");
+                CityParts::generateStreet(unfinishedStreets[unfinisedIndex], unfinishedStreets, randomNames, "back");
+                numberOfStreets--;
+            }
+            if (unfinishedStreets[unfinisedIndex]->connectedStreetsFront.size() < maxConnectedStreet)
+            {
+                CityParts::generateStreet(unfinishedStreets[unfinisedIndex], unfinishedStreets, randomNames, "front");
+                numberOfStreets--;
             }
         }
     }
@@ -110,6 +125,7 @@ void CityParts::generateStreet(CityParts::Street* rootStreet, vector<CityParts::
     {
         opposingSide = "front";
     }
+
     //creating temporary street
     vector<Street*> tempStoredStreets;
     tempStoredStreets.push_back(rootStreet);
@@ -118,6 +134,7 @@ void CityParts::generateStreet(CityParts::Street* rootStreet, vector<CityParts::
     unfinishedStreets.push_back(temporaryStreet);
     tempStoredStreets.push_back(temporaryStreet);
     delete temporaryStreet;
+
     //connecting to eachothers
     for (auto rootS : tempStoredStreets)
     {
