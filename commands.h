@@ -1,4 +1,5 @@
-#pragma once
+#ifndef COMMANDS_H
+#define COMMANDS_H
 
 #include <string>
 
@@ -25,3 +26,5 @@ public:
     const string EDIT_COMMAND = "edit";
     const string LIST_COMMAND = "list";
 };
+
+#endif

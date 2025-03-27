@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CITY_H
+#define CITY_H
 
 #include <string>
 #include <vector>
@@ -25,9 +26,9 @@ public:
         vector<Street*> connectedStreetsFront;
         vector<Street*> connectedStreetsBack;
 
-        Street(vector<string>);
+        Street(const vector<string>&);
         
-        void attachStreet(Street*, string);
+        void attachStreet(Street*, const string& side);
         void listProperties();
         void listBuildings();
         void listConnectedStreetsBack();
@@ -35,9 +36,9 @@ public:
 
         void editName();
         void editCity();
-        void editBuildings(string, CityParts::Buildings);
-        void editConnectedStreetsBack(string, CityParts::Street*);
-        void editConnectedStreetsFront(string, CityParts::Street*);
+        void editBuildings(const string&, const CityParts::Buildings&);
+        void editConnectedStreetsBack(const string&, CityParts::Street*);
+        void editConnectedStreetsFront(const string&, CityParts::Street*);
 
         void deleteCity();
     };
@@ -53,22 +54,24 @@ public:
         void listProperties();
 
         void editName();
-        void editStreets(string);
+        void editStreets(const string&);
     };
 
-    static Street* createStreet(vector<string>);
-    static void createCity(vector<string>);
+    static Street* createStreet(const vector<string>&);
+    static void createCity(const vector<string>&);
 
-    static string pickRandomName(vector<string> &randomNames);
+    static string pickRandomName(vector<string>&);
     static vector<string> randomNameGenerator();
-    static void generateCityForWeb(string, int, int); //creates a city then adds streets to it
-    static void generateStreet(CityParts::Street*, vector<::CityParts::Street*>&, vector<string>, string); //generate a street with a root and attach given number of streets to it
+    static void generateCityForWeb(const string&, int, int);
+    static void generateStreet(Street*, vector<Street*>&, vector<string>&, const string&);
 
-    static bool checkForExistingObject(string, string);
-    static bool checkIfStreetInCityAlready(string, string);
+    static bool checkForExistingObject(const string&, const string&);
+    static bool checkIfStreetInCityAlready(const string&, const string&);
 
     static vector<CityParts::City> cityVector;
     static vector<CityParts::Street> streetVector;
 
-    static int getCityIndex(string);
+    static int getCityIndex(const string&);
 };
+
+#endif

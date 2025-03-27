@@ -12,13 +12,13 @@ Dialog::Command List(command.LIST_COMMAND);
 
 void Dialog::initializeCommands()
 {
-    MainHelp.loadHelpMessage(loadHelpFromFile(dialog.PATH_TO_HELP));
-    Create.loadHelpMessage("To create an object type: create {type} {name}. After creation use edit to add properties to it.");
-    Edit.loadHelpMessage("To edit an object first select the object: edit {type}.");
-    List.loadHelpMessage("To list an object vector type: list {type}.");
+    MainHelp.loadCommandHelpMessage(loadHelpFromFile(dialog.PATH_TO_HELP));
+    Create.loadCommandHelpMessage("To create an object type: create {type} {name}. After creation use edit to add properties to it.");
+    Edit.loadCommandHelpMessage("To edit an object first select the object: edit {type}.");
+    List.loadCommandHelpMessage("To list an object vector type: list {type}.");
 }
 
-string Dialog::loadHelpFromFile(string path)
+string Dialog::loadHelpFromFile(const string& path)
 {
     ifstream file(path);
     string reValue = "";
@@ -31,7 +31,7 @@ string Dialog::loadHelpFromFile(string path)
     return reValue;
 }
 
-void Dialog::processInput(vector<string> input)
+void Dialog::processInput(vector<string>& input)
 {
     for (string el : input)
     {
@@ -44,7 +44,7 @@ void Dialog::processInput(vector<string> input)
     handleCommands(input);
 }
 
-void Dialog::handleHelp(string input)
+void Dialog::handleHelp(const string& input)
 {
     if(input == MainHelp.commandName) {MainHelp.printHelp();}
     else if(input == Create.commandName) {Create.printHelp();}
@@ -52,7 +52,7 @@ void Dialog::handleHelp(string input)
     else if(input == List.commandName) {List.printHelp();}
 }
 
-void Dialog::handleCommands(vector<string> input)
+void Dialog::handleCommands(vector<string>& input)
 {
     if (input[0] == Create.commandName)
     {
@@ -90,7 +90,7 @@ void Dialog::handleCommands(vector<string> input)
     }
 }
 
-void Dialog::handleCreateObjects(vector<string> properties)
+void Dialog::handleCreateObjects(const vector<string>& properties)
 {
     if (properties[0] == "street")
     {
@@ -106,7 +106,7 @@ void Dialog::handleCreateObjects(vector<string> properties)
     }
 }
 
-void Dialog::handleEditObjects(vector<string> properties)
+void Dialog::handleEditObjects(const vector<string>& properties)
 {
     vector<string> input;
     if (properties[0] == "street")
@@ -259,7 +259,7 @@ void Dialog::listEditActions()
     cout << command.EDIT_APPEND_COMMAND << "      " << "append an element to vectors (don't work on single value properties)" << endl;
 }
 
-void Dialog::errorHandle(string commandName)
+void Dialog::errorHandle(const string& commandName)
 {
     if (commandName == Create.commandName)
     {
@@ -295,13 +295,13 @@ void Dialog::listAllCities()
     }
 }
 
-vector<string> Dialog::takeInput(string customText)
+vector<string> Dialog::takeInput(const string& customText)
 {
     string input;
     vector<string> command;
     if (customText == "none")
     {
-        cout << ":";
+        cout << ": ";
     }
     else
     {
@@ -312,7 +312,7 @@ vector<string> Dialog::takeInput(string customText)
     string token;
     while (getline(temp, token, ' '))
     {
-        command.push_back(token);
+        command.emplace_back(token);
     }
     return command;
 }
@@ -323,7 +323,7 @@ void Dialog::invalidInputMessage()
     return;
 }
 
-void Dialog::handleListObject(vector<string> type)
+void Dialog::handleListObject(const vector<string>& type)
 {
     if (type[0] == "street")
     {
@@ -360,7 +360,7 @@ Dialog::Command::Command(string name)
     this->commandName = name;
 }
 
-void Dialog::Command::loadHelpMessage(string helpMessage)
+void Dialog::Command::loadCommandHelpMessage(const string& helpMessage)
 {
     this->helpMessage = helpMessage;
 }

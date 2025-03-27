@@ -6,7 +6,7 @@ vector<CityParts::City> CityParts::cityVector;
 vector<CityParts::Street> CityParts::streetVector;
 
 //FUNCTIONS-------------------------------------------------------
-CityParts::Street* CityParts::createStreet(vector<string> properties)
+CityParts::Street* CityParts::createStreet(const vector<string>& properties)
 {
     if (properties[1].size() == 2)
     {
@@ -19,7 +19,7 @@ CityParts::Street* CityParts::createStreet(vector<string> properties)
     return temp;
 }
 
-void CityParts::createCity(vector<string> properties)
+void CityParts::createCity(const vector<string>& properties)
 {
     if (properties[1].size() == 2)
     {
@@ -37,7 +37,7 @@ void CityParts::createCity(vector<string> properties)
     delete temp;
 }
 
-string CityParts::pickRandomName(vector<string> &randomNames)
+string CityParts::pickRandomName(vector<string>& randomNames)
 {
     //getting random name vector
     int nameIndex = rand() % randomNames.size();
@@ -61,7 +61,7 @@ vector<string> CityParts::randomNameGenerator()
     return names;
 }
 
-void CityParts::generateCityForWeb(string cityName, int numberOfStreets, int maxConnectedStreet)
+void CityParts::generateCityForWeb(const string& cityName, int numberOfStreets, int maxConnectedStreet)
 {
     //recommended number of streets is 50
     vector<string> randomNames = CityParts::randomNameGenerator(); //get random names vector for streets
@@ -114,7 +114,7 @@ void CityParts::generateCityForWeb(string cityName, int numberOfStreets, int max
     }
 }
 
-void CityParts::generateStreet(CityParts::Street* rootStreet, vector<CityParts::Street*> &unfinishedStreets, vector<string> randomNames, string side)
+void CityParts::generateStreet(Street* rootStreet, vector<Street*>& unfinishedStreets, vector<string>& randomNames, const string& side)
 {
     string opposingSide;
     if (side == "front")
@@ -149,7 +149,7 @@ void CityParts::generateStreet(CityParts::Street* rootStreet, vector<CityParts::
     }
 }
 
-bool CityParts::checkForExistingObject(string name, string obj)
+bool CityParts::checkForExistingObject(const string& name, const string& obj)
 {
     if (obj == "street")
     {
@@ -174,7 +174,7 @@ bool CityParts::checkForExistingObject(string name, string obj)
     return false;
 }
 
-bool CityParts::checkIfStreetInCityAlready(string targetName, string cityName)
+bool CityParts::checkIfStreetInCityAlready(const string& targetName, const string& cityName)
 {
     for (auto street : CityParts::streetVector)
     {
@@ -186,7 +186,7 @@ bool CityParts::checkIfStreetInCityAlready(string targetName, string cityName)
     return false;
 }
 
-int CityParts::getCityIndex(string name)
+int CityParts::getCityIndex(const string& name)
 {
     for (int index = 0; index < cityVector.size(); index++)
     {
@@ -199,7 +199,7 @@ int CityParts::getCityIndex(string name)
 }
 
 // STREET FUNCTIONS-----------------------------------------------
-CityParts::Street::Street(vector<string> properties)
+CityParts::Street::Street(const vector<string>& properties)
 {
     for (int index = 0; index < properties.size(); index++)
     {
@@ -212,7 +212,7 @@ CityParts::Street::Street(vector<string> properties)
     }
 }
 
-void CityParts::Street::attachStreet(Street* streetToBeAttached, string side)
+void CityParts::Street::attachStreet(Street* streetToBeAttached, const string& side)
 {
     if(side == "back")
     {
@@ -328,7 +328,7 @@ void CityParts::Street::editCity()
     } while(name != "exit");
 }
 
-void CityParts::Street::editBuildings(string action, CityParts::Buildings target)
+void CityParts::Street::editBuildings(const string& action, const CityParts::Buildings& target)
 {
     Commands command;
     if (action == command.EDIT_DELETE_COMMAND)
@@ -349,7 +349,7 @@ void CityParts::Street::editBuildings(string action, CityParts::Buildings target
     }
 }
 
-void CityParts::Street::editConnectedStreetsBack(string action, CityParts::Street* target)
+void CityParts::Street::editConnectedStreetsBack(const string& action, CityParts::Street* target)
 {
     Commands command;
     if (action == command.EDIT_DELETE_COMMAND)
@@ -370,7 +370,7 @@ void CityParts::Street::editConnectedStreetsBack(string action, CityParts::Stree
     }
 }
 
-void CityParts::Street::editConnectedStreetsFront(string action, CityParts::Street* target)
+void CityParts::Street::editConnectedStreetsFront(const string& action, CityParts::Street* target)
 {
     Commands command;
     if (action == command.EDIT_DELETE_COMMAND)
@@ -457,7 +457,7 @@ void CityParts::City::editName()
 }
 
 
-void CityParts::City::editStreets(string action)
+void CityParts::City::editStreets(const string& action)
 {
     Commands command;
     //take input then to add street or remove

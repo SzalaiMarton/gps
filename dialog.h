@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DIALOG_H
+#define DIALOG_H
 
 #include <fstream>
 #include "city.h"
@@ -16,31 +17,33 @@ public:
         string commandName;
 
         Command(string);
-        void loadHelpMessage(string);
+        void loadCommandHelpMessage(const string&);
         void printHelp();
     };
 
     //functions-------------------------------------------------
     static void initializeCommands();
-    static string loadHelpFromFile(string);
+    static string loadHelpFromFile(const string&);
     static void listAllStreets();
     static void listAllCities();
-    static vector<string> takeInput(string c = "none");
+    static vector<string> takeInput(const string& i = "none");
     static void invalidInputMessage();
 
     //list handle-----------------------------------------------
-    static void handleListObject(vector<string>);
+    static void handleListObject(const vector<string>&);
 
     //edit handle-----------------------------------------------
-    static void handleEditObjects(vector<string>);
+    static void handleEditObjects(const vector<string>&);
     static void editStreet(int index);
     static void editCity(int index);
     static void listEditActions();
 
     //command handle--------------------------------------------
-    static void processInput(vector<string>);
-    static void handleHelp(string);
-    static void handleCommands(vector<string>);
-    static void handleCreateObjects(vector<string>);
-    static void errorHandle(string);
+    static void processInput(vector<string>&);
+    static void handleHelp(const string&);
+    static void handleCommands(vector<string>&);
+    static void handleCreateObjects(const vector<string>&);
+    static void errorHandle(const string&);
 };
+
+#endif
