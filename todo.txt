@@ -2,10 +2,15 @@ final product:
 -terminal like dialogs: command with parameters
 -streets and cities are in vectors for the sake of quick search
 -from the street vector you can add streets to cities
--shortest rout finder
+-shortest route finder
+
+for web:
+-to have a generateCityForWeb with a generateStreet functions
+-make an algorithm to find shortest route btweeen two given streets
+
 
 to do:
--continue edit funcs
+-test generate city, streets
 
 compile all at once
 to run .\main.exe

@@ -26,9 +26,9 @@ public:
         vector<Street*> connectedStreetsFront;
         vector<Street*> connectedStreetsBack;
 
-        Street(const vector<string>&);
+        Street(const string& properties);
         
-        void attachStreet(Street*, const string& side);
+        void attachStreet(Street* streetToAttach, const string& side);
         void listProperties();
         void listBuildings();
         void listConnectedStreetsBack();
@@ -36,9 +36,9 @@ public:
 
         void editName();
         void editCity();
-        void editBuildings(const string&, const CityParts::Buildings&);
-        void editConnectedStreetsBack(const string&, CityParts::Street*);
-        void editConnectedStreetsFront(const string&, CityParts::Street*);
+        void editBuildings(const string& action, const CityParts::Buildings& building);
+        void editConnectedStreetsBack(const string& action, CityParts::Street* street);
+        void editConnectedStreetsFront(const string& action, CityParts::Street* street);
 
         void deleteCity();
     };
@@ -48,30 +48,30 @@ public:
         string cityName = "default";
         vector<Street*> streets;
         
-        City(vector<string>);
+        City(string& properties);
         
         void listStreets();
         void listProperties();
 
         void editName();
-        void editStreets(const string&);
+        void editStreets(const string& action);
     };
 
-    static Street* createStreet(const vector<string>&);
-    static void createCity(const vector<string>&);
+    static Street* createStreet(string& properties);
+    static void createCity(string& properties);
 
-    static string pickRandomName(vector<string>&);
+    static string& pickRandomName(vector<string>& nameList);
     static vector<string> randomNameGenerator();
-    static void generateCityForWeb(const string&, int, int);
-    static void generateStreet(Street*, vector<Street*>&, vector<string>&, const string&);
+    static void generateCityForWeb(string& cityName, int streetCount, int maxConnections);
+    static void generateStreet(Street* rootStreet, vector<Street*>& unfinishedStreets, vector<string>& randomNames, const string& side);
 
-    static bool checkForExistingObject(const string&, const string&);
-    static bool checkIfStreetInCityAlready(const string&, const string&);
+    static bool checkForExistingObject(const string& name, const string& objectType);
+    static bool checkIfStreetInCityAlready(const string& streetName, const string& cityName);
 
     static vector<CityParts::City> cityVector;
     static vector<CityParts::Street> streetVector;
 
-    static int getCityIndex(const string&);
+    static int getCityIndex(const string& cityName);
 };
 
 #endif

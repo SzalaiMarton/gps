@@ -90,7 +90,7 @@ void Dialog::handleCommands(vector<string>& input)
     }
 }
 
-void Dialog::handleCreateObjects(const vector<string>& properties)
+void Dialog::handleCreateObjects(vector<string>& properties)
 {
     if (properties[0] == "street")
     {
@@ -98,7 +98,7 @@ void Dialog::handleCreateObjects(const vector<string>& properties)
     }
     else if (properties[0] == "city")
     {
-        CityParts::createCity(properties);
+        CityParts::createCity(properties[1]);
     }
     else
     {

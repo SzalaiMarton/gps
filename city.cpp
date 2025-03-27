@@ -6,42 +6,42 @@ vector<CityParts::City> CityParts::cityVector;
 vector<CityParts::Street> CityParts::streetVector;
 
 //FUNCTIONS-------------------------------------------------------
-CityParts::Street* CityParts::createStreet(const vector<string>& properties)
+CityParts::Street* CityParts::createStreet(string& properties)
 {
-    if (properties[1].size() == 2)
+    if (properties.size() == 2)
     {
         cout << "Invalid name, it should be 3 characters long" << endl;
-        return;
+        return new CityParts::Street("null");
     }
     CityParts::Street* temp = new CityParts::Street(properties); // [1]-name
-    streetVector.push_back(*temp);
+    streetVector.emplace_back(*temp);
     cout << temp->streetName << " has been created." << endl;
     return temp;
 }
 
-void CityParts::createCity(const vector<string>& properties)
+void CityParts::createCity(string& properties)
 {
-    if (properties[1].size() == 2)
+    if (properties.size() == 2)
     {
         cout << "Invalid name, it should be 3 characters long" << endl;
         return;
     }
-    if (CityParts::checkForExistingObject(properties[1], "city"))
+    if (CityParts::checkForExistingObject(properties, "city"))
     {
         cout << "City already exist." << endl;
         return;
     }
     CityParts::City* temp = new CityParts::City(properties); // [1]-name
-    cityVector.push_back(*temp);
+    cityVector.emplace_back(*temp);
     cout << temp->cityName << " has been created." << endl;
     delete temp;
 }
 
-string CityParts::pickRandomName(vector<string>& randomNames)
+string& CityParts::pickRandomName(vector<string>& randomNames)
 {
     //getting random name vector
     int nameIndex = rand() % randomNames.size();
-    string streetName = randomNames[nameIndex];
+    string& streetName = randomNames[nameIndex];
     //erasing used name from vector
     randomNames.erase(randomNames.begin() + nameIndex);
     return streetName;
@@ -55,32 +55,31 @@ vector<string> CityParts::randomNameGenerator()
     string line;
     while(getline(file, line))
     {
-        names.push_back(line); 
+        names.emplace_back(line); 
     }
     file.close();
     return names;
 }
 
-void CityParts::generateCityForWeb(const string& cityName, int numberOfStreets, int maxConnectedStreet)
+void CityParts::generateCityForWeb(string& cityName, int numberOfStreets, int maxConnectedStreet)
 {
     //recommended number of streets is 50
     vector<string> randomNames = CityParts::randomNameGenerator(); //get random names vector for streets
-    CityParts::createCity({cityName}); //create city
+    CityParts::createCity(cityName); //create city
     if (maxConnectedStreet < 2)
     {
         cout << "Invalid number of connected streets." << endl;
         return;
     }
     int currentCityIndex = getCityIndex(cityName);
-
     //create a street then attach maxConnectedStreet - 1 ammount of streets to it and then attach each streets to eachothers connected back
     //so it is always create a crossroad
 
     // initial street creations -> these streets are added to unfinishedStreets exept rootStreet
     int streetsToBeSubtracted = 1;
     vector<Street*> unfinishedStreets; //streets that still needs streets to their back or front
-    CityParts::Street* rootStreet = CityParts::createStreet({CityParts::pickRandomName(randomNames)});
-    CityParts::cityVector[currentCityIndex].streets.push_back(rootStreet);
+    CityParts::Street* rootStreet = CityParts::createStreet(CityParts::pickRandomName(randomNames));
+    CityParts::cityVector[currentCityIndex].streets.emplace_back(rootStreet);
     for (int index = 0; index < maxConnectedStreet; index++) // back
     {
         CityParts::generateStreet(rootStreet, unfinishedStreets, randomNames, "back");
@@ -128,11 +127,11 @@ void CityParts::generateStreet(Street* rootStreet, vector<Street*>& unfinishedSt
 
     //creating temporary street
     vector<Street*> tempStoredStreets;
-    tempStoredStreets.push_back(rootStreet);
-    CityParts::Street* temporaryStreet = CityParts::createStreet({CityParts::pickRandomName(randomNames)});
+    tempStoredStreets.emplace_back(rootStreet);
+    CityParts::Street* temporaryStreet = CityParts::createStreet(CityParts::pickRandomName(randomNames));
     rootStreet->attachStreet(temporaryStreet, side);
-    unfinishedStreets.push_back(temporaryStreet);
-    tempStoredStreets.push_back(temporaryStreet);
+    unfinishedStreets.emplace_back(temporaryStreet);
+    tempStoredStreets.emplace_back(temporaryStreet);
     delete temporaryStreet;
 
     //connecting to eachothers
@@ -199,28 +198,20 @@ int CityParts::getCityIndex(const string& name)
 }
 
 // STREET FUNCTIONS-----------------------------------------------
-CityParts::Street::Street(const vector<string>& properties)
+CityParts::Street::Street(const string& properties)
 {
-    for (int index = 0; index < properties.size(); index++)
-    {
-        switch (index)
-        {
-        case 1:
-            streetName = properties[index];
-            break;
-        }
-    }
+    streetName = properties;
 }
 
 void CityParts::Street::attachStreet(Street* streetToBeAttached, const string& side)
 {
     if(side == "back")
     {
-        this->connectedStreetsBack.push_back(streetToBeAttached);
+        this->connectedStreetsBack.emplace_back(streetToBeAttached);
     }
     else if(side == "front")
     {
-        this->connectedStreetsFront.push_back(streetToBeAttached);
+        this->connectedStreetsFront.emplace_back(streetToBeAttached);
     }
 }
 
@@ -345,7 +336,7 @@ void CityParts::Street::editBuildings(const string& action, const CityParts::Bui
     }
     else if (action == command.EDIT_APPEND_COMMAND)
     {
-        this->buildings.push_back(target);
+        this->buildings.emplace_back(target);
     }
 }
 
@@ -366,7 +357,7 @@ void CityParts::Street::editConnectedStreetsBack(const string& action, CityParts
     }
     else if (action == command.EDIT_APPEND_COMMAND)
     {
-        this->connectedStreetsBack.push_back(target);
+        this->connectedStreetsBack.emplace_back(target);
     }
 }
 
@@ -387,7 +378,7 @@ void CityParts::Street::editConnectedStreetsFront(const string& action, CityPart
     }
     else if (action == command.EDIT_APPEND_COMMAND)
     {
-        this->connectedStreetsFront.push_back(target);
+        this->connectedStreetsFront.emplace_back(target);
     }
 }
 
@@ -397,17 +388,9 @@ void CityParts::Street::deleteCity()
 }
 
 // CITY FUNCTIONS-----------------------------------------------
-CityParts::City::City(vector<string> properties)
+CityParts::City::City(string& properties)
 {
-    for (int index = 0; index < properties.size(); index++)
-    {
-        switch (index)
-        {
-        case 1:
-            cityName = properties[index];
-            break;
-        }
-    }
+    cityName = properties;
 }
 
 
@@ -476,7 +459,7 @@ void CityParts::City::editStreets(const string& action)
                 {
                     if (street.streetName == input)
                     {
-                        this->streets.push_back(&street);
+                        this->streets.emplace_back(&street);
                         cout << "Street has been attached." << endl;
                         return;
                     }
