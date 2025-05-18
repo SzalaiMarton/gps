@@ -1,0 +1,115 @@
+0 Maple Heights
+        Connected Back: Meadow View, Main Loop, Maple Lane,
+        Connected Front: Glen Drive, Harbor Street, Golden Square, Lake Trail,
+
+1 Birch Way
+        Connected Back: Mountain Heights, Ridge Street, Bay Trail,
+        Connected Front: Glen Drive, Oak Square, Mountain Hollow, Willow Court,
+
+2 Maple Hollow
+        Connected Back: Forest Place, Silver Lane, Meadow Street,
+        Connected Front: Glen Drive, Park Gardens, Winter Terrace, Bay Heights,
+
+3 Broad Trail
+        Connected Back: Glen Drive, Hickory Parkway, Autumn Way, Valley Circle,
+        Connected Front: Creek Circle, Market Square,
+
+4 Spruce Lane
+        Connected Back: Glen Drive,
+        Connected Front:
+
+5 Spring Trail
+        Connected Back: Glen Drive,
+        Connected Front:
+
+6 Meadow View
+        Connected Back:
+        Connected Front: Maple Heights,
+
+7 Main Loop
+        Connected Back:
+        Connected Front: Maple Heights,
+
+8 Maple Lane
+        Connected Back:
+        Connected Front: Maple Heights,
+
+9 Harbor Street
+        Connected Back: Maple Heights,
+        Connected Front:
+
+10 Golden Square
+        Connected Back: Maple Heights,
+        Connected Front:
+
+11 Lake Trail
+        Connected Back: Maple Heights,
+        Connected Front:
+
+12 Mountain Heights
+        Connected Back:
+        Connected Front: Birch Way,
+
+13 Ridge Street
+        Connected Back:
+        Connected Front: Birch Way,
+
+14 Bay Trail
+        Connected Back:
+        Connected Front: Birch Way,
+
+15 Oak Square
+        Connected Back: Birch Way,
+        Connected Front:
+
+16 Mountain Hollow
+        Connected Back: Birch Way,
+        Connected Front:
+
+17 Willow Court
+        Connected Back: Birch Way,
+        Connected Front:
+
+18 Forest Place
+        Connected Back:
+        Connected Front: Maple Hollow,
+
+19 Silver Lane
+        Connected Back:
+        Connected Front: Maple Hollow,
+
+20 Meadow Street
+        Connected Back:
+        Connected Front: Maple Hollow,
+
+21 Park Gardens
+        Connected Back: Maple Hollow,
+        Connected Front:
+
+22 Winter Terrace
+        Connected Back: Maple Hollow,
+        Connected Front:
+
+23 Bay Heights
+        Connected Back: Maple Hollow,
+        Connected Front:
+
+24 Hickory Parkway
+        Connected Back:
+        Connected Front: Broad Trail,
+
+25 Autumn Way
+        Connected Back:
+        Connected Front: Broad Trail,
+
+26 Valley Circle
+        Connected Back:
+        Connected Front: Broad Trail,
+
+27 Creek Circle
+        Connected Back: Broad Trail,
+        Connected Front:
+
+28 Market Square
+        Connected Back: Broad Trail,
+        Connected Front:
