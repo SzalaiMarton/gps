@@ -59,3 +59,39 @@ void Display::refreshFrame(const std::vector<City*>& citiesDisplay)
 
 	window.display();
 }
+
+sf::Vector2f Display::getFrontOfShape(sf::Sprite& shape)
+{
+	sf::FloatRect bounds = shape.getGlobalBounds();
+	
+	// 1 - psitive addition, 0 - no addition, -1 - negative addition
+	short xAdditionTransformer{}, yAdditionTransformer{}; 
+
+	// get rotation and calculating how the postion should be calculated
+	float rotation = shape.getRotation();
+	short fullRotationCount = rotation / 360;
+	rotation -= 360 * fullRotationCount;
+	
+	if (rotation == 0)
+	{
+		xAdditionTransformer = 1;
+		yAdditionTransformer = 0;
+	}
+	else if (rotation == 90)
+	{
+		xAdditionTransformer = 0;
+		yAdditionTransformer = 1;
+	}
+	else if (rotation == 180)
+	{
+		xAdditionTransformer = -1;
+		yAdditionTransformer = 0;
+	}
+	else if (rotation == 270)
+	{
+		xAdditionTransformer = 0;
+		yAdditionTransformer = -1;
+	}
+
+	return *new sf::Vector2f(bounds.left + (bounds.width*xAdditionTransformer), bounds.top + (bounds.height * yAdditionTransformer));
+}

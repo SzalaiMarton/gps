@@ -13,4 +13,5 @@ namespace Display
 	void displayStreet(Street* street, bool root = false);
 	void displayCity(City* city);
 	void refreshFrame(const std::vector<City*>& citiesDisplay);
+	sf::Vector2f getFrontOfShape(sf::Sprite& shape);
 }

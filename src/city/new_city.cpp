@@ -24,7 +24,7 @@ void Street::addStreetToBack(Street *street)
 {
     if (street == nullptr)
     {
-        throw new CustomExceptions::NullInputException("Street::addStreetToBack");
+        throw CustomExceptions::NullInputException("Street::addStreetToBack");
         return;
     }
     
@@ -39,7 +39,7 @@ void Street::addStreetToFront(Street *street)
 {
     if (street == nullptr)
     {
-        throw new CustomExceptions::NullInputException("Street::addStreetToFront");
+        throw CustomExceptions::NullInputException("Street::addStreetToFront");
         return;
     }
 
@@ -54,7 +54,7 @@ void Street::changeTexture(sf::Texture* texture)
 {
     if (texture == nullptr)
     {
-        throw new CustomExceptions::NullInputException("City::changeTexture");
+        throw CustomExceptions::NullInputException("City::changeTexture");
         return;
     }
     this->shape.setTexture(*texture);
@@ -132,7 +132,7 @@ void City::changeTexture(sf::Texture* texture)
 {
     if (texture == nullptr)
     {
-        throw new CustomExceptions::NullInputException("City::changeTexture");
+        throw CustomExceptions::NullInputException("City::changeTexture");
         return;
     }
     this->shape.setTexture(*texture);
@@ -142,7 +142,7 @@ void City::addStreet(Street *street)
 {
     if (street == nullptr)
     {
-        throw new CustomExceptions::NullInputException("City::addStreet");
+        throw CustomExceptions::NullInputException("City::addStreet");
         return;
     }
     this->streets.emplace_back(street);
@@ -152,7 +152,7 @@ void City::addUnfinishedStreet(Street *street)
 {
     if (street == nullptr)
     {
-        throw new CustomExceptions::NullInputException("City::addUnfinishedStreet");
+        throw CustomExceptions::NullInputException("City::addUnfinishedStreet");
         return;
     }
     this->unfinishedStreets.emplace_back(street);
@@ -162,7 +162,7 @@ void City::removeUnfinishedStreet(Street *street)
 {
     if (street == nullptr)
     {
-        throw new CustomExceptions::NullInputException("City::removeUnfinishedStreet");
+        throw CustomExceptions::NullInputException("City::removeUnfinishedStreet");
         return;
     }
     
@@ -246,7 +246,7 @@ std::string CityFunctions::getRandomName(std::vector<std::string>& names)
     {
         /*std::cout << "read from file" << std::endl;
         names = CityFunctions::getRandomNamesFromFile();*/
-        throw new CustomExceptions::VectorEmptyException("CityFunctions::getRandomName");
+        throw CustomExceptions::VectorEmptyException("CityFunctions::getRandomName");
         return nullptr;
     }
     static std::random_device rd;

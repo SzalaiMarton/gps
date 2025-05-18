@@ -17,16 +17,23 @@ Assets::ObjectTexture::ObjectTexture(const std::string& name, sf::Texture* textu
 void Assets::loadDirectoryElements()
 {
     std::vector<std::string> contents = Assets::getDirectoryContents(Assets::path);
-    for (const auto& text : contents)
-    {
+    for (std::string& text : contents)
+    { 
+        std::cout << text << std::endl;
         sf::Texture* temp = new sf::Texture();
-        if (!temp->loadFromFile(text))
+        try
+        {
+            std::string tex = Assets::path + text;
+            temp->loadFromFile(tex);
+            Assets::textureVector.emplace_back(new Assets::ObjectTexture(text, temp));
+        }
+        catch (const std::exception&)
         {
             delete temp;
-            throw new CustomExceptions::FileOrFolderCannotBeFoundException("Assets::loadDirectoryElements");
+            throw CustomExceptions::FileOrFolderCannotBeFoundException("Assets::loadDirectoryElements");
             continue;
         }
-        Assets::textureVector.emplace_back(new Assets::ObjectTexture(text.substr(Assets::path.length(), text.find(".") - Assets::path.length()), temp));
+        //Assets::textureVector.emplace_back(new Assets::ObjectTexture(text.substr(Assets::path.length(), text.find(".") - Assets::path.length()), temp));
     }
 }
 
@@ -37,7 +44,7 @@ std::vector<std::string> Assets::getDirectoryContents(const std::string& path)
     {
         for (const auto& entry : std::filesystem::directory_iterator(path))
         {
-            contents.emplace_back(entry.path().string());
+            contents.emplace_back(entry.path().filename().string());
         }
     }
     catch (const std::filesystem::filesystem_error& e)
