@@ -19,7 +19,6 @@ void Assets::loadDirectoryElements()
     std::vector<std::string> contents = Assets::getDirectoryContents(Assets::path);
     for (std::string& text : contents)
     { 
-        std::cout << text << std::endl;
         sf::Texture* temp = new sf::Texture();
         try
         {
@@ -33,7 +32,6 @@ void Assets::loadDirectoryElements()
             throw CustomExceptions::FileOrFolderCannotBeFoundException("Assets::loadDirectoryElements");
             continue;
         }
-        //Assets::textureVector.emplace_back(new Assets::ObjectTexture(text.substr(Assets::path.length(), text.find(".") - Assets::path.length()), temp));
     }
 }
 
@@ -56,9 +54,10 @@ std::vector<std::string> Assets::getDirectoryContents(const std::string& path)
 
 sf::Texture* Assets::getObjectTexture(const std::string& name)
 {
+    std::string nameWithPng = name + ".png";
     for (auto& text : Assets::textureVector)
     {
-        if (text->name == name)
+        if (text->name == nameWithPng)
         {
             return text->texture;
         }

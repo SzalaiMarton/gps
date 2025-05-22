@@ -22,7 +22,12 @@ public:
     bool frontFull;
     bool backFull;
     bool isDisplayed;
+    bool isConnectedToPoint_Front;
+    bool isConnectedToPoint_Back;
+    bool root;
     sf::Sprite shape;
+    Display::ConnectionPoint* frontPoint;
+    Display::ConnectionPoint* backPoint;
 
     Street() = default;
     Street(const std::string& name);
@@ -37,6 +42,7 @@ public:
     std::vector<Street*> getConnectedStreetsBack();
     std::vector<Street*> getConnectedStreetsFront();
     std::string getName();
+    
 
     void changeName(const std::string& newName);
 };
@@ -45,12 +51,13 @@ class City
 {
 private:
     std::string name;
-    std::vector<Street*> streets;
     std::vector<Street*> unfinishedStreets;
 
 public:
     sf::Sprite shape;
     Street* rootStreet;
+    std::vector<Street*> streets;
+
 
     City() = default;
     City(const std::string& name);
@@ -72,11 +79,17 @@ public:
 
 namespace CityFunctions
 {
+    enum VectorSide
+    {
+        VECTOR_FRONT,
+        VECTOR_BACK,
+        VECTOR_INVALID_SIDE
+    };
+
     std::string getRandomName(std::vector<std::string>& names);
     std::vector<std::string> getRandomNamesFromFile();
     City* generateCity(const std::string& name, int maxStreetCount);
     Street* createRootStreet(const std::string& name, City* city);
     bool connectStreetsToStreet(Street* target, City* city, std::vector<std::string> randomNames, int maxStreetCount);
-    //void getNextShapePosition(Street* street, float& xPos, float& yPos);
-}
-
+    VectorSide getWhereToSnap(Street* target, Street* connectTo);
+};

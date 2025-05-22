@@ -30,4 +30,10 @@ namespace CustomExceptions
     public:
         FileOrFolderCannotBeFoundException(const std::string& funcName) : CityExceptions("File or folder cannot be found, from this function: " + funcName) {}
     };
+
+    class CannotAddStreetToPoint : public CityExceptions
+    {
+    public:
+        CannotAddStreetToPoint(const std::string& funcName) : CityExceptions("File or folder cannot be found, from this function: " + funcName) {}
+    };
 }

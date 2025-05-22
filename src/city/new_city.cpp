@@ -1,6 +1,6 @@
 #include "new_city.h"
-#include "../display/display.h"
 #include "../custom_exception.h"
+#include "../display/display.h"
 
 Street::Street(const std::string& name)
 {
@@ -9,6 +9,7 @@ Street::Street(const std::string& name)
     this->connectedStreetsFront = *new std::vector<Street*>();
     this->backFull = false;
     this->frontFull = false;
+    this->root = false;
 }
 
 Street::Street(const std::string& name, std::vector<Street*>& back, std::vector<Street*>& front)
@@ -18,6 +19,7 @@ Street::Street(const std::string& name, std::vector<Street*>& back, std::vector<
     this->connectedStreetsFront = front;
     this->backFull = false;
     this->frontFull = false;
+    this->root = false;
 }
 
 void Street::addStreetToBack(Street *street)
@@ -84,6 +86,8 @@ std::string Street::getName()
 {
     return this->name;
 }
+
+
 
 void Street::changeName(const std::string& name)
 {
@@ -220,7 +224,8 @@ City* CityFunctions::generateCity(const std::string& name, int maxStreetCount)
         {
             std::string name = CityFunctions::getRandomName(randomNames);
             Street* rootStreet = CityFunctions::createRootStreet(name, resCity);
-            Display::displayStreet(rootStreet, true);
+            resCity->addStreet(rootStreet);
+            Display::displayStreet(rootStreet);
             bool canContinue = CityFunctions::connectStreetsToStreet(rootStreet, resCity, randomNames, maxStreetCount);
             if (!canContinue)
             {
@@ -276,6 +281,7 @@ std::vector<std::string> CityFunctions::getRandomNamesFromFile()
 Street* CityFunctions::createRootStreet(const std::string& name, City* city)
 {
     city->rootStreet = new Street(name);
+    city->rootStreet->root = true;
     return city->rootStreet;
 }
 
@@ -329,18 +335,19 @@ bool CityFunctions::connectStreetsToStreet(Street *target, City* city, std::vect
     return true;
 }
 
-//void CityFunctions::getNextShapePosition(Street* street, float& xPos, float& yPos)
-//{
-//    // calculates the next street's to be displayed cords
-//    // 
-//    // by checking if streets in the back or front are displayed,
-//    // then gets the cords relative to the displayed street
-//
-//    for (auto& str : street->getConnectedStreetsBack())
-//    {
-//        if (str->isDisplayed)
-//        {
-//            xPos = str->shape.getGlobalBounds().
-//        }
-//    }
-//}
+CityFunctions::VectorSide CityFunctions::getWhereToSnap(Street* target, Street* connectTo)
+{
+    for (const auto& el : connectTo->getConnectedStreetsBack())
+    {
+        if (el == target) {
+            return CityFunctions::VECTOR_BACK;
+        }
+    }
+    for (const auto& el : connectTo->getConnectedStreetsFront())
+    {
+        if (el == target) {
+            return CityFunctions::VECTOR_FRONT;
+        }
+    }
+    return CityFunctions::VECTOR_INVALID_SIDE;
+}

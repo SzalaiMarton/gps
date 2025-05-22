@@ -6,7 +6,7 @@ int main()
 {
     Assets::loadDirectoryElements();
 
-    City* Berlin = CityFunctions::generateCity("Berlin", 30);
+    City* Berlin = CityFunctions::generateCity("Berlin", 1);
     while (Display::window.isOpen())
     {
         sf::Event event;
@@ -18,17 +18,11 @@ int main()
                 std::cout << mousePos.x << " " << mousePos.y << std::endl;
             }
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
-            {
-                sf::Vector2f pos = Display::getFrontOfShape(Berlin->rootStreet->shape);
-                std::cout << pos.x << " " << pos.y << std::endl;
-            }
-
             if (event.type == sf::Event::Closed)
             {
                 Display::window.close();
             }
-            //Display::refreshFrame({Berlin});
+            Display::refreshFrame({ Berlin });
         }
     }
 }
