@@ -1,23 +1,26 @@
 #include "assets.h"
-#include "../custom_exception.h"
 
 namespace Assets
 {
     std::string path = "res\\";
-    int shapeScale = 1.f;
+    float shapeScale = 1.f;
     std::vector<ObjectTexture*> textureVector = {};
+    std::string streetTextureName = "s_street_marked";
+    std::string rootTextureName = "s_street_marked";
+    std::string pointTextureName = "connection_point";
 }
 
 Assets::ObjectTexture::ObjectTexture(const std::string& name, sf::Texture* texture)
 {
 	this->name = name;
 	this->texture = texture;
+	this->texture = texture;
 }
 
 void Assets::loadDirectoryElements()
 {
     std::vector<std::string> contents = Assets::getDirectoryContents(Assets::path);
-    for (std::string& text : contents)
+    for (auto& text : contents)
     { 
         sf::Texture* temp = new sf::Texture();
         try
@@ -28,8 +31,6 @@ void Assets::loadDirectoryElements()
         }
         catch (const std::exception&)
         {
-            delete temp;
-            throw CustomExceptions::FileOrFolderCannotBeFoundException("Assets::loadDirectoryElements");
             continue;
         }
     }

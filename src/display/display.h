@@ -7,41 +7,35 @@ namespace Display
 {
 	enum DisplaySide
 	{
-		BACK,
-		FRONT,
-		LEFT,
-		RIGHT,
-		INVALID_SIDE
+		FRONT = 0,
+		LEFT = 1,
+		BACK = 2,
+		RIGHT = 3,
+		INVALID_SIDE = 5
 	};
+
+	short getNumberFromSide(DisplaySide side);
+	DisplaySide convertNumberToDisplaySide(short number);
 
 	template <typename T>
 	class ConnectionsToShape
 	{
 	public:
-		ConnectionsToShape() = default;
-		ConnectionsToShape(std::map<DisplaySide, T> elementsToBeAdded)
+		ConnectionsToShape()
 		{
-			for (const auto& [side, element] : elementsToBeAdded)
-			{
-				this->addConnection(side, element);
-			}
-		}
-		ConnectionsToShape(T* elements[4])
-		{
-			for (short index = 0; index < 4; index++)
-			{
-				try
-				{
-					this->addWithoutSide(elements[index]);
-				}
-				catch (const std::exception&)
-				{
-					return;
-				}
-			}
+			left = nullptr;
+			right = nullptr;
+			back = nullptr;
+			front = nullptr;
 		}
 		void addConnection(DisplaySide side, T element)
 		{
+			if (this->isEmpty())
+			{
+				this->front = element;
+				return;
+			}
+
 			if (side == Display::BACK)
 				this->back = element;
 			else if (side == Display::FRONT)
@@ -91,20 +85,39 @@ namespace Display
 			{
 				return true;
 			}
-			else if (side == Display::RIGHT && left == nullptr)
+			else if (side == Display::RIGHT && right == nullptr)
 			{
 				return true;
 			}
-			else if (side == Display::FRONT && left == nullptr)
+			else if (side == Display::FRONT && front == nullptr)
 			{
 				return true;
 			}
-			else if (side == Display::BACK && left == nullptr)
+			else if (side == Display::BACK && back == nullptr)
 			{
 				return true;
 			}
 			return false;
 		}
+		uint8_t size()
+		{
+			uint8_t size = 0;
+			if (!left)
+				size++;
+			if (!right)
+				size++;
+			if (!front)
+				size++;
+			if (!back)
+				size++;
+			return size;
+		}
+		void printValues()
+		{
+			std::cout << "left: " << left << " right: " << right << " \nfront: " << front << " back: " << back << std::endl;
+			std::cout << "-----------------------------------------------------" << std::endl;
+		}
+		
 
 		T left;
 		T right;
@@ -117,33 +130,54 @@ namespace Display
 	public:
 		sf::Sprite shape;
 		ConnectionsToShape<Street*> connections;
+		uint8_t maxConnections = 4;
 
-		ConnectionPoint() = default;
-		void connectToShape(Street* connectTo, DisplaySide side);
+		ConnectionPoint();
+		void connectToShape(Street* connectTo, DisplaySide whereTo);
 		DisplaySide getRandomFreeSide();
+		DisplaySide getWhereStreetConnected(Street* street);
+		DisplaySide getWhereToConnectCloseStreets(Street* street);
 	};
 
 	extern int width;
 	extern int height;
 	extern sf::RenderWindow window;
-
 	extern float xRootPosition, yRootPosition;
-	
-	void displayStreet(Street* street, Street* connectTo);
+
+	void displayStreet(Street* street, City* city);
 	void displayCity(City* city);
 	void refreshFrame(const std::vector<City*>& citiesDisplay);
 
-	sf::Vector2f* getSidePoints(sf::Sprite* shape, DisplaySide side);
-	sf::Vector2f getTopRight(sf::Sprite* shape);
-	sf::Vector2f getBotRight(sf::Sprite* shape);
-	sf::Vector2f getBotLeft(sf::Sprite* shape);
+	sf::Vector2f getSidePointsOfShape(sf::Sprite* shape, DisplaySide side);
+	void setOriginForShape(sf::Sprite* shape, DisplaySide side);
+
 	sf::Vector2f getTopLeft(sf::Sprite* shape);
-	float* getSmallerX_Vector2f(sf::Vector2f* vec1, sf::Vector2f* vec2);
-	float* getSmallerY_Vector2f(sf::Vector2f* vec1, sf::Vector2f* vec2);
+	sf::Vector2f getTopRight(sf::Sprite* shape);
+	sf::Vector2f getBotLeft(sf::Sprite* shape);
+	sf::Vector2f getBotRight(sf::Sprite* shape);
+
+	float getSmallerX_Vector2f(const sf::Vector2f& vec1, const sf::Vector2f& vec2);
+	float getSmallerY_Vector2f(const sf::Vector2f& vec1, const sf::Vector2f& vec2);
 
 	DisplaySide getOppositeSide(DisplaySide side);
+
+	ConnectionPoint* getExistingConnectionPoint(Street* street, DisplaySide side);
+	ConnectionPoint* checkForClosePoints(City* city, Street* street, DisplaySide side);
 
 	void createPointsToStreet(Street* street);
 	ConnectionPoint* createConnectionPoint();
 	DisplaySide convertVectorSideToDisplaySide(CityFunctions::VectorSide side);
+
+	sf::Vector2f calculateMiddlePoint(const sf::Vector2f& point1, const sf::Vector2f& point2);
+
+	void rotateShapeBySide(sf::Sprite* shape, DisplaySide side);
+	void rotateShapeByFloat(sf::Sprite* shape, const float& customRotation);
+	void rotateShapeForConnection(sf::Sprite* shape, sf::Sprite* connectTo);
+
+	void rearragneStreetsByCords(City* city);
+
+	void displayNotDisplayed(City* city);
+
+	int printSameStreetCords(City* city);
+	std::string sideToString(DisplaySide side);
 }

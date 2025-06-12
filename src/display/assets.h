@@ -15,13 +15,14 @@ namespace Assets
 		ObjectTexture(const std::string& name, sf::Texture* texture);
 	};
 
-	
-
 	void loadDirectoryElements();
 	std::vector<std::string> getDirectoryContents(const std::string& path);
 	sf::Texture* getObjectTexture(const std::string& name);
 
 	extern std::string path;
-	extern int shapeScale;
+	extern float shapeScale;
 	extern std::vector<ObjectTexture*> textureVector;
+	extern std::string streetTextureName;
+	extern std::string pointTextureName;
+	extern std::string rootTextureName;
 }
