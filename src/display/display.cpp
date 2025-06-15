@@ -40,7 +40,7 @@ void Display::ConnectionPoint::connectToShape(Street* connectTo, DisplaySide whe
 	else if (this->connections.size() != this->maxConnections)
 	{
 		DisplaySide connectionPoint_displaySide = this->getRandomFreeSide();
-		
+
 		if (connectionPoint_displaySide == INVALID_SIDE)
 		{
 			std::cout << connectTo->name << std::endl;
@@ -167,13 +167,12 @@ void Display::displayStreet(Street* street, City* city)
 		parentStreet_ConnectionPoint->connectToShape(street, BACK);
 		street->frontPoint = parentStreet_ConnectionPoint;
 
-		ConnectionPoint* closestPoint = Display::checkForClosePoints(city, street, BACK);
+		ConnectionPoint* closestPoint = Display::checkForClosePointsAtBack(city, street, BACK);
 		if (closestPoint != nullptr)
 		{
-			std::cout << "closestpoint to: " << street->name << " is " << closestPoint << std::endl;
-			//closestPoint->connectToShape(street, closestPoint->getWhereToConnectCloseStreets(street));
+			std::cout << "near point found at: " << street->name << " with the address of: " << closestPoint << std::endl;
 
-			//street->backPoint = closestPoint;
+			street->backPoint = closestPoint;
 		}
 	}
 
@@ -202,9 +201,9 @@ void Display::refreshFrame(const std::vector<City*>& citiesDisplay)
 {
 	window.clear();
 
-	for (auto& city : citiesDisplay)
+	for (const auto& city : citiesDisplay)
 	{
-		for (auto& str : city->streets)
+		for (const auto& str : city->streets)
 		{
 			window.draw(str->shape);
 			if (str->frontPoint)
@@ -291,31 +290,15 @@ sf::Vector2f Display::getBotRight(sf::Sprite* shape)
 	return sf::Vector2f(bounds.left + bounds.width, bounds.top + bounds.height);
 }
 
-float Display::getSmallerX_Vector2f(const sf::Vector2f& vec1, const sf::Vector2f& vec2)
+float Display::getSmallerNumber(const float number1, const float number2)
 {
-	if (vec1.x < vec2.x)
+	if (number1 < number2)
 	{
-		return vec1.x;
+		return number1;
 	}
-	else if (vec1.x > vec2.x)
+	else if (number1 > number2)
 	{
-		return vec2.x;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-float Display::getSmallerY_Vector2f(const sf::Vector2f& vec1, const sf::Vector2f& vec2)
-{
-	if (vec1.y < vec2.y)
-	{
-		return vec1.y;
-	}
-	else if (vec1.y > vec2.y)
-	{
-		return vec2.y;
+		return number2;
 	}
 	else
 	{
@@ -342,6 +325,9 @@ Display::DisplaySide Display::getOppositeSide(DisplaySide side)
 
 Display::ConnectionPoint* Display::getExistingConnectionPoint(Street* street, DisplaySide side)
 {
+	if (street == nullptr)
+		return nullptr;
+
 	if (street->frontPoint && side == FRONT)
 	{
 		return street->frontPoint;
@@ -353,20 +339,15 @@ Display::ConnectionPoint* Display::getExistingConnectionPoint(Street* street, Di
 	return nullptr;
 }
 
-Display::ConnectionPoint* Display::checkForClosePoints(City* city, Street* street, DisplaySide side)
+Display::ConnectionPoint* Display::checkForClosePointsAtBack(City* city, Street* street, DisplaySide side)
 {
 	sf::Vector2f streetBackPoint = Display::getSidePointsOfShape(&street->shape, Display::DisplaySide::BACK);
-	sf::Vector2f streetFrontPoint = Display::getSidePointsOfShape(&street->shape, Display::DisplaySide::FRONT);
 
 	for (const auto& str : city->streets)
 	{
-		if (str->backPoint != nullptr && side == BACK && (str->backPoint->shape.getGlobalBounds().contains(streetBackPoint) || str->backPoint->shape.getGlobalBounds().contains(streetFrontPoint)))
+		if (str->backPoint != nullptr && side == BACK && str->backPoint->shape.getGlobalBounds().contains(streetBackPoint))
 		{
 			return str->backPoint;
-		}
-		if (str->frontPoint != nullptr && side == FRONT && (str->frontPoint->shape.getGlobalBounds().contains(streetBackPoint) || str->frontPoint->shape.getGlobalBounds().contains(streetFrontPoint)))
-		{
-			return str->frontPoint;
 		}
 	}
 	return nullptr;
@@ -386,6 +367,8 @@ void Display::createPointsToStreet(Street* street)
 		
 		Display::window.draw(street->frontPoint->shape);
 		Display::window.draw(street->backPoint->shape);
+
+		std::cout << "created front and back point for: " << street->name << std::endl;
 	}
 	else if (street->backPoint == nullptr)
 	{
@@ -395,6 +378,8 @@ void Display::createPointsToStreet(Street* street)
 		street->backPoint->connectToShape(street, Display::BACK);
 		
 		Display::window.draw(street->backPoint->shape);
+		
+		std::cout << "created back point for: " << street->name << std::endl;
 	}
 	else if (street->frontPoint == nullptr)
 	{
@@ -404,6 +389,8 @@ void Display::createPointsToStreet(Street* street)
 		street->frontPoint->connectToShape(street, Display::FRONT);
 		
 		Display::window.draw(street->frontPoint->shape);
+		
+		std::cout << "created front point for: " << street->name << std::endl;
 	}
 }
 
@@ -428,7 +415,7 @@ Display::DisplaySide Display::convertVectorSideToDisplaySide(CityFunctions::Vect
 
 sf::Vector2f Display::calculateMiddlePoint(const sf::Vector2f& point1, const sf::Vector2f& point2)
 {
-	sf::Vector2f smaller = sf::Vector2f(Display::getSmallerX_Vector2f(point1, point2), Display::getSmallerY_Vector2f(point1, point2));
+	sf::Vector2f smaller = sf::Vector2f(Display::getSmallerNumber(point1.x, point2.x), Display::getSmallerNumber(point1.y, point2.y));
 
 	smaller.x += abs(point1.x - point2.x) / 2.f;
 	smaller.y += abs(point1.y - point2.y) / 2.f;
@@ -478,7 +465,11 @@ void Display::rearragneStreetsByCords(City* city)
 		{
 			if (str1 == str2)
 				continue;
-			else if (str1->shape.getGlobalBounds().contains(str2->shape.getPosition()))
+
+			sf::FloatRect str1Bounds = str1->shape.getGlobalBounds();
+			sf::FloatRect str2Bounds = str2->shape.getGlobalBounds();
+
+			if (str1Bounds.top / 2 == str2Bounds.top / 2 && str1Bounds.width / 2 == str2Bounds.width / 2)
 			{
 				str2->removeStreetFromNeighbors(holderForStreetsBack, holderForStreetsFront);
 				city->connectToRandomUnfinishedStreet(str2);

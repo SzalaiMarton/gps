@@ -7,7 +7,7 @@ namespace Assets
     std::vector<ObjectTexture*> textureVector = {};
     std::string streetTextureName = "s_street_marked";
     std::string rootTextureName = "s_street_marked";
-    std::string pointTextureName = "connection_point";
+    std::string pointTextureName = "marked_point";
 }
 
 Assets::ObjectTexture::ObjectTexture(const std::string& name, sf::Texture* texture)
@@ -23,16 +23,9 @@ void Assets::loadDirectoryElements()
     for (auto& text : contents)
     { 
         sf::Texture* temp = new sf::Texture();
-        try
-        {
-            std::string tex = Assets::path + text;
-            temp->loadFromFile(tex);
-            Assets::textureVector.emplace_back(new Assets::ObjectTexture(text, temp));
-        }
-        catch (const std::exception&)
-        {
-            continue;
-        }
+        std::string tex = Assets::path + text;
+        temp->loadFromFile(tex);
+        Assets::textureVector.emplace_back(new Assets::ObjectTexture(text, temp));
     }
 }
 

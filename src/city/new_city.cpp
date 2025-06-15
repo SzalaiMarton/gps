@@ -1,151 +1,100 @@
 #include "new_city.h"
-#include "../display/display.h"
+#include <iostream>
+#include <cstdint>
+#include <random>
+#include <fstream>
+#include <sstream>
 
 Street::Street(const std::string& name)
 {
-    this->changeName(name);
+    this->name = name;
     this->connectedStreetsBack = std::vector<Street*>();
     this->connectedStreetsFront = std::vector<Street*>();
-    this->isBackFull = false;
-    this->isFrontFull = false;
+    this->weight = 0;
     this->isRoot = false;
+    this->isFinished = false;
+    this->backPoint = nullptr;
+    this->frontPoint = nullptr;
+
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(0, 10 - 1);
+
+    this->weight = distrib(gen);
 }
 
 Street::Street(const std::string& name, std::vector<Street*>& back, std::vector<Street*>& front)
 {
-    this->changeName(name);
+    this->name = name;
     this->connectedStreetsBack = back;
     this->connectedStreetsFront = front;
-    this->isBackFull = false;
-    this->isFrontFull = false;
+    this->weight = 0;
     this->isRoot = false;
+    this->isFinished = false;
+    this->backPoint = nullptr;
+    this->frontPoint = nullptr;
+
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(0, 10 - 1);
+
+    this->weight = distrib(gen);
 }
 
-void Street::checkIfBackFull()
+bool Street::addStreetToBack(Street *street, bool addToTheOther)
 {
-    if (this->connectedStreetsBack.size() == this->maxBackStreetsSize)
-        this->isBackFull = true;
-    else
-        this->isBackFull = false;
-}
-
-void Street::checkIfFrontFull()
-{
-    if (this->connectedStreetsFront.size() == this->maxFrontStreetsSize)
-        this->isFrontFull = true;
-    else
-        this->isFrontFull = false;
-}
-
-void Street::addStreetToBack(Street *street, bool addToTheOther)
-{
+    bool canAdd = true;
+    
     if (street == nullptr)
-        return;
+        return false;
     
     if (addToTheOther)
-        street->addStreetToFront(this, false);
+        canAdd = street->addStreetToFront(this, false);
 
-    this->checkIfBackFull();
-
-    if (!this->isBackFull && !this->isStreetConnected(street))
+    if (this->connectedStreetsBack.size() < this->idealConnectionSize && !this->isStreetConnected(street) && canAdd)
     {
         this->connectedStreetsBack.emplace_back(street);
-        if (this->connectedStreetsBack.size() >= this->maxBackStreetsSize)
-            this->isBackFull = true;
+
+        if (this->backPoint != nullptr && addToTheOther)
+        {
+            street->frontPoint = this->backPoint;
+            street->frontPoint->connectedTo.emplace_back(street);
+            std::cout << street->frontPoint << " front point added to " << street->name << std::endl;
+        }
+
+        return true;
     }
+    else
+        this->isFinished = true;
+    return false;
 }
 
-void Street::addStreetToFront(Street *street, bool addToTheOther)
+bool Street::addStreetToFront(Street *street, bool addToTheOther)
 {
+    bool canAdd = true;
+
     if (street == nullptr)
-        return;
+        return false;
 
     if (addToTheOther)
-        street->addStreetToBack(this, false);
+        canAdd = street->addStreetToBack(this, false);
 
-    this->checkIfFrontFull();
-
-    if (!this->isFrontFull && !this->isStreetConnected(street))
+    if (this->connectedStreetsFront.size() < this->idealConnectionSize && !this->isStreetConnected(street) && canAdd)
     {
         this->connectedStreetsFront.emplace_back(street);
-        if (this->connectedStreetsFront.size() >= this->maxFrontStreetsSize)
-            this->isFrontFull = true;
-    }
-}
-
-void Street::addStreetToNewNeighbors(std::vector<Street*>& holderForStreetsBack, std::vector<Street*>& holderForStreetsFront)
-{
-    if (!holderForStreetsBack.empty())
-    {
-        this->connectedStreetsBack.clear();
-
-        for (auto& str : holderForStreetsBack)
+        
+        if (this->frontPoint != nullptr && addToTheOther)
         {
-            this->addStreetToBack(str, true);
+            street->backPoint = this->frontPoint;
+            street->backPoint->connectedTo.emplace_back(street);
+            std::cout << street->backPoint << " back point added to " << street->name << std::endl;
         }
+
+        return true;
     }
-
-    if (!holderForStreetsFront.empty())
-    {
-        this->connectedStreetsFront.clear();
-       
-        for (auto& str : holderForStreetsFront)
-        {
-            this->addStreetToFront(str, true);
-        }
-    }
-}
-
-void Street::removeFromBack(Street* street, bool removeTheOther)
-{
-    for (int index = 0; index < this->connectedStreetsBack.size(); index++)
-    {
-        if (this->connectedStreetsBack[index] == street)
-            this->connectedStreetsBack.erase(this->connectedStreetsBack.begin() + index);
-    }
-
-    if (removeTheOther)
-        street->removeFromFront(this, false);
-}
-
-void Street::removeFromFront(Street* street, bool removeTheOther)
-{
-    for (int index = 0; index < this->connectedStreetsFront.size(); index++)
-    {
-        if (this->connectedStreetsFront[index] == street)
-            this->connectedStreetsFront.erase(this->connectedStreetsFront.begin() + index);
-    }
-
-    if (removeTheOther)
-        street->removeFromBack(this, false);
-}
-
-void Street::removeStreetFromNeighbors(std::vector<Street*>& holderForStreetsBack, std::vector<Street*>& holderForStreetsFront)
-{
-    for (auto& str : this->connectedStreetsBack)
-    {
-        holderForStreetsBack.emplace_back(str);
-        str->removeFromBack(this, true);
-    }
-    for (auto& str : this->connectedStreetsFront)
-    {
-        holderForStreetsFront.emplace_back(str);
-        str->removeFromBack(this, true);
-    }
-
-    this->isDisplayed = false;
-
-    this->connectedStreetsBack.clear();
-    this->connectedStreetsFront.clear();
-}
-
-void Street::changeTexture(sf::Texture* texture)
-{
-    if (texture == nullptr)
-    {
-        return;
-    }
-    this->shape.setTexture(*texture);
+    else
+        this->isFinished = true;
+    return false;
 }
 
 bool Street::isStreetConnected(Street* street)
@@ -163,19 +112,11 @@ bool Street::isStreetConnected(Street* street)
     return false;
 }
 
-void Street::changeName(const std::string& name)
+CityFunctions::VectorSide Street::getEmptyVectorSide() const
 {
-    if (name.length() <= 30)
-    {
-        this->name = name;
-    }
-}
-
-CityFunctions::VectorSide Street::getEmptyVectorSide()
-{
-    if (!this->isBackFull)
+    if (this->connectedStreetsBack.size() < this->idealConnectionSize)
         return CityFunctions::VECTOR_BACK;
-    else if (!this->isFrontFull)
+    else if (this->connectedStreetsFront.size() < this->idealConnectionSize)
         return CityFunctions::VECTOR_FRONT;
     else
         return CityFunctions::VECTOR_INVALID_SIDE;
@@ -183,36 +124,21 @@ CityFunctions::VectorSide Street::getEmptyVectorSide()
 
 City::City(const std::string& name)
 {
-    this->changeName(name);
+    this->name = name;
     this->streets = std::vector<Street*>();
+    this->rootStreet = nullptr;
 }
 
 City::City(const std::string& name, std::vector<Street*> streets)
 {
-    this->changeName(name);
+    this->name = name;
     this->streets = streets;
+    this->rootStreet = nullptr;
 }
 
-int City::getUnfinishedCount()
+int City::getUnfinishedCount() const
 {
     return (int)this->unfinishedStreets.size();
-}
-
-void City::changeName(const std::string& name)
-{
-    if (name.length() <= 30)
-    {
-        this->name = name;
-    }
-}
-
-void City::changeTexture(sf::Texture* texture)
-{
-    if (texture == nullptr)
-    {
-        return;
-    }
-    this->shape.setTexture(*texture);
 }
 
 void City::addStreet(Street *street)
@@ -233,20 +159,18 @@ void City::addUnfinishedStreet(Street *street)
     this->unfinishedStreets.emplace_back(street);
 }
 
-void City::removeUnfinishedStreet(Street *street)
+void City::removeFinishedFromUnfinished()
 {
-    if (street == nullptr)
+    std::vector<std::vector<Street*>::iterator> strIndexesToBeDeleted{};
+
+    auto it = this->unfinishedStreets.begin();
+
+    while (it != this->unfinishedStreets.end())
     {
-        return;
-    }
-    
-    for (int index = 0; index < this->unfinishedStreets.size(); index++)
-    {
-        if (this->unfinishedStreets[index] == street)
-        {
-            this->unfinishedStreets.erase(this->unfinishedStreets.begin() + index);
-            return;
-        }
+        if ((*it)->isFinished)
+            it = this->unfinishedStreets.erase(it);
+        else
+            ++it;
     }
 }
 
@@ -278,7 +202,8 @@ void City::printStreets(bool printConnected)
     for (int index = 0; index < this->streets.size(); index++)
     {
         int displayIndex = index;
-        std::cout << displayIndex + 1 << " " << this->streets[index]->name << std::endl;
+        std::cout << displayIndex + 1 << " " << this->streets[index]->name << " weight: " << (int)this->streets[index]->weight << std::endl;
+        std::cout << "backPoint: " << this->streets[index]->backPoint << " frontPoint: " << this->streets[index]->frontPoint << std::endl;
         if (printConnected)
         {
             std::cout << "\tConnected Back: ";
@@ -317,19 +242,24 @@ City* CityFunctions::generateCity(const std::string& name, int maxStreetCount)
     resCity->addStreet(resCity->rootStreet);
     resCity->addUnfinishedStreet(resCity->rootStreet);
 
-    while(resCity->streets.size() != maxStreetCount)
+    while (resCity->streets.size() != maxStreetCount)
     {
         Street* street = new Street(CityFunctions::getRandomName(randomNames));
         resCity->addStreet(street);
         resCity->addUnfinishedStreet(street);
     }
 
-    resCity->connectStreets();
+    while (!(resCity->unfinishedStreets.size() <= 5))
+    {
+        resCity->connectStreets();
+        std::cout << "***********************************************\n";
+    }
 
-    //resCity.printUnfinished();
+    //resCity->printAllStreetReferenceCount();
     resCity->printStreets(true);
 
-    Display::displayCity(resCity);
+    //leave it for later
+    //Display::displayCity(resCity);
 
     return resCity;
 }
@@ -342,25 +272,6 @@ std::string CityFunctions::vectorSideToString(VectorSide side)
         return "vector_back";
     else if (VECTOR_INVALID_SIDE == side)
         return "vector_invalid";
-}
-
-Street* CityFunctions::getWhereToConnectStreet(Street* street)
-{
-    for (const auto& str : street->connectedStreetsBack)
-    {
-        if (str->isDisplayed)
-        {
-            return str;
-        }
-    }
-    for (const auto& str : street->connectedStreetsFront)
-    {
-        if (str->isDisplayed)
-        {
-            return str;
-        }
-    }
-    return nullptr;
 }
 
 std::string CityFunctions::getRandomName(std::vector<std::string>& names)
@@ -398,13 +309,21 @@ Street* CityFunctions::createRootStreet(const std::string& name, City* city)
 {
     city->rootStreet = new Street(name);
     city->rootStreet->isRoot = true;
+    city->rootStreet->backPoint = new ConnectionPoint(city->rootStreet);
+    city->rootStreet->frontPoint = new ConnectionPoint(city->rootStreet);
+
+    std::cout << "back point for root street: " << city->rootStreet->backPoint << std::endl;
+    std::cout << "front point for root street: " << city->rootStreet->frontPoint << std::endl;
+
     return city->rootStreet;
 }
 
 void City::connectStreets()
 {
-    Street* connectTo = this->rootStreet;
     CityFunctions::VectorSide vectorSide{};
+    Street* connectTo = this->getFirstUnfinishedStreet();
+    
+    std::cout << "current connectTo: " << connectTo->name << std::endl;
 
     for (int index = 0; index < this->unfinishedStreets.size(); index++)
     {
@@ -413,46 +332,33 @@ void City::connectStreets()
 
         vectorSide = connectTo->getEmptyVectorSide();
 
-        if (vectorSide == CityFunctions::VECTOR_BACK)
+        if (vectorSide == CityFunctions::VECTOR_BACK && this->unfinishedStreets[index]->frontPoint == nullptr)
         {
+            std::cout << "adding to back " << this->unfinishedStreets[index]->name << std::endl;
             connectTo->addStreetToBack(this->unfinishedStreets[index], true);
-            for (auto& strOuter : connectTo->connectedStreetsBack)
-            {
-                for (auto& str : connectTo->connectedStreetsBack)
-                {
-                    if (str == strOuter)
-                        continue;
-
-                    strOuter->addStreetToFront(str, false);
-                }
-            }
         }
-        else if (vectorSide == CityFunctions::VECTOR_FRONT)
+        else if (vectorSide == CityFunctions::VECTOR_FRONT && this->unfinishedStreets[index]->backPoint == nullptr)
         {
+            std::cout << "adding to front " << this->unfinishedStreets[index]->name << std::endl;
             connectTo->addStreetToFront(this->unfinishedStreets[index], true);
-            for (auto& strOuter : connectTo->connectedStreetsFront)
-            {
-                for (auto& str : connectTo->connectedStreetsFront)
-                {
-                    if (str == strOuter)
-                        continue;
-
-                    strOuter->addStreetToFront(str, false);
-                }
-            }
         }
         else
         {
             connectTo->isFinished = true;
             connectTo = this->getFirstUnfinishedStreet();
+            std::cout << "current connectTo: " << connectTo->name << std::endl;
+            connectTo->createPointToStreet();
             if (connectTo == nullptr)
             {
-                std::cerr << "nullptr at City::connectStreets()" << std::endl;
+                std::cout << "nullptr at City::connectStreets()" << std::endl;
                 return;
             }
             index--;
         }
+        std::cout << "----------------------------------" << std::endl;
     }
+
+    this->removeFinishedFromUnfinished();
 }
 
 void City::connectToRandomUnfinishedStreet(Street* street)
@@ -462,17 +368,67 @@ void City::connectToRandomUnfinishedStreet(Street* street)
     randomUnfinished->addStreetToBack(street, true);
 }
 
-CityFunctions::VectorSide CityFunctions::getWhereToSnap(Street* target, Street* connectTo)
+void City::getShortestRoute(const std::string& from, const std::string& to, City* city)
 {
-    for (const auto& el : connectTo->connectedStreetsBack)
+    
+}
+
+void City::printAllStreetReferenceCount()
+{
+    int currentStrReferenceBack = 0;
+    int currentStrReferenceFront = 0;
+
+    for (const auto& str : this->streets)
     {
-        if (el == target) 
-            return CityFunctions::VECTOR_BACK;
+        for (const auto& innerStr : this->streets)
+        {
+            if (str == innerStr)
+                continue;
+
+            for (const auto& backStr : innerStr->connectedStreetsBack)
+            {
+                if (str == backStr)
+                    currentStrReferenceBack++;
+            }
+            for (const auto& frontStr : innerStr->connectedStreetsFront)
+            {
+                if (str == frontStr)
+                    currentStrReferenceFront++;
+            }
+        }
+
+        if (currentStrReferenceBack > 3)
+            std::cout << str->name << " was referenced at back: " << currentStrReferenceBack << " times" << std::endl;
+        if (currentStrReferenceFront > 3)
+            std::cout << str->name << " was referenced at back: " << currentStrReferenceFront << " times" << std::endl;
+
+        currentStrReferenceBack = 0;
+        currentStrReferenceFront = 0;
     }
-    for (const auto& el : connectTo->connectedStreetsFront)
+}
+
+ConnectionPoint::ConnectionPoint(Street* street)
+{
+    this->connectedTo = std::vector<Street*>();
+    this->connectedTo.emplace_back(street);
+    
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(0, 10 - 1);
+
+    this->weight = distrib(gen);
+}
+
+void Street::createPointToStreet()
+{
+    if (this->backPoint == nullptr)
     {
-        if (el == target) 
-            return CityFunctions::VECTOR_FRONT;
+        this->backPoint = new ConnectionPoint(this);
+        std::cout << this->backPoint << "created back for " << this->name << std::endl;
     }
-    return CityFunctions::VECTOR_INVALID_SIDE;
+    if (this->frontPoint == nullptr)
+    {
+        this->frontPoint = new ConnectionPoint(this);
+        std::cout << this->frontPoint << " created front for " << this->name << std::endl;
+    }
 }

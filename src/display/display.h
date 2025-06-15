@@ -11,7 +11,7 @@ namespace Display
 		LEFT = 1,
 		BACK = 2,
 		RIGHT = 3,
-		INVALID_SIDE = 5
+		INVALID_SIDE = 5,
 	};
 
 	short getNumberFromSide(DisplaySide side);
@@ -30,12 +30,6 @@ namespace Display
 		}
 		void addConnection(DisplaySide side, T element)
 		{
-			if (this->isEmpty())
-			{
-				this->front = element;
-				return;
-			}
-
 			if (side == Display::BACK)
 				this->back = element;
 			else if (side == Display::FRONT)
@@ -114,11 +108,17 @@ namespace Display
 		}
 		void printValues()
 		{
-			std::cout << "left: " << left << " right: " << right << " \nfront: " << front << " back: " << back << std::endl;
+			if (left != nullptr)
+				std::cout << "left: " << left->name << std::endl;
+			if (right != nullptr)
+				std::cout << "right: " << right->name << std::endl;
+			if (back != nullptr)
+				std::cout << "back: " << back->name << std::endl;
+			if (front != nullptr)
+				std::cout << "front: " << front->name << std::endl;
 			std::cout << "-----------------------------------------------------" << std::endl;
 		}
 		
-
 		T left;
 		T right;
 		T back;
@@ -156,13 +156,12 @@ namespace Display
 	sf::Vector2f getBotLeft(sf::Sprite* shape);
 	sf::Vector2f getBotRight(sf::Sprite* shape);
 
-	float getSmallerX_Vector2f(const sf::Vector2f& vec1, const sf::Vector2f& vec2);
-	float getSmallerY_Vector2f(const sf::Vector2f& vec1, const sf::Vector2f& vec2);
+	float getSmallerNumber(const float number1, const float number2);
 
 	DisplaySide getOppositeSide(DisplaySide side);
 
 	ConnectionPoint* getExistingConnectionPoint(Street* street, DisplaySide side);
-	ConnectionPoint* checkForClosePoints(City* city, Street* street, DisplaySide side);
+	ConnectionPoint* checkForClosePointsAtBack(City* city, Street* street, DisplaySide side);
 
 	void createPointsToStreet(Street* street);
 	ConnectionPoint* createConnectionPoint();
