@@ -23,22 +23,12 @@ Street::Street(const std::string& name)
     this->weight = distrib(gen);
 }
 
-Street::Street(const std::string& name, std::vector<Street*>& back, std::vector<Street*>& front)
+Street::~Street()
 {
-    this->name = name;
-    this->connectedStreetsBack = back;
-    this->connectedStreetsFront = front;
-    this->weight = 0;
-    this->isRoot = false;
-    this->isFinished = false;
-    this->backPoint = nullptr;
-    this->frontPoint = nullptr;
-
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(0, 10 - 1);
-
-    this->weight = distrib(gen);
+    if (this->backPoint != nullptr)
+        this->backPoint->removeConnection(this);
+    if(this->frontPoint != nullptr)
+            this->frontPoint->removeConnection(this);
 }
 
 bool Street::addStreetToBack(Street *street, bool addToTheOther)
@@ -97,6 +87,17 @@ bool Street::addStreetToFront(Street *street, bool addToTheOther)
     return false;
 }
 
+bool ConnectionPoint::isStreetConnected(Street* street)
+{
+    for (auto& str : this->connectedTo)
+    {
+        if (str == street)
+            return true;
+    }
+    return false;
+}
+
+
 bool Street::isStreetConnected(Street* street)
 {
     for (const auto& str : this->connectedStreetsBack)
@@ -126,14 +127,24 @@ City::City(const std::string& name)
 {
     this->name = name;
     this->streets = std::vector<Street*>();
+    this->points = std::vector<ConnectionPoint*>();
     this->rootStreet = nullptr;
 }
 
-City::City(const std::string& name, std::vector<Street*> streets)
+City::~City()
 {
-    this->name = name;
-    this->streets = streets;
-    this->rootStreet = nullptr;
+    for (int i = 0; i < this->streets.size(); i++)
+    {
+        delete this->streets[i];
+    }
+    this->streets.clear();
+    rootStreet = nullptr;
+
+    for (int i = 0; i < this->points.size(); i++)
+    {
+        delete this->points[i];
+    }
+    this->points.clear();
 }
 
 int City::getUnfinishedCount() const
@@ -417,6 +428,27 @@ ConnectionPoint::ConnectionPoint(Street* street)
     std::uniform_int_distribution<> distrib(0, 10 - 1);
 
     this->weight = distrib(gen);
+}
+
+void ConnectionPoint::removeConnection(Street* street)
+{
+    if (this->isStreetConnected(street))
+    {
+        for (int i = 0; i < this->connectedTo.size(); i++)
+        {
+            if (this->connectedTo[i] == street)
+            {
+                this->connectedTo.erase(this->connectedTo.begin() + i);
+
+                if (street->backPoint == this)
+                    street->backPoint = nullptr;
+                else 
+                    street->frontPoint = nullptr;
+
+                return;
+            }
+        }
+    }
 }
 
 void Street::createPointToStreet()

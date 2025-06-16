@@ -21,6 +21,8 @@ int main()
         Berlin->getShortestRoute(from, to, Berlin);
     }
 
+    delete Berlin;
+
     /*while (Display::window.isOpen())
     {
         sf::Event event;

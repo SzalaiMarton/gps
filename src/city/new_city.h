@@ -32,6 +32,10 @@ public:
 
     ConnectionPoint(Street* street);
 
+    ~ConnectionPoint() = default;
+
+    void removeConnection(Street* street);
+    bool isStreetConnected(Street* street);
 };
 
 class Street
@@ -49,13 +53,13 @@ public:
 
     Street() = default;
     Street(const std::string& name);
-    Street(const std::string& name, std::vector<Street*>& back, std::vector<Street*>& front);
+
+    ~Street();
 
     bool addStreetToBack(Street* street, bool addToTheOther);
     bool addStreetToFront(Street* street, bool addToTheOther);
 
     void createPointToStreet();
-
 
     bool isStreetConnected(Street* street);
     CityFunctions::VectorSide getEmptyVectorSide() const;
@@ -68,10 +72,12 @@ public:
     std::vector<Street*> unfinishedStreets; 
     Street* rootStreet;
     std::vector<Street*> streets;
+    std::vector<ConnectionPoint*> points;
 
     City() = default;
     City(const std::string& name);
-    City(const std::string& name, std::vector<Street*> streets);
+
+    ~City();
 
     int getUnfinishedCount() const;
     Street* getFirstUnfinishedStreet();
