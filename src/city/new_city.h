@@ -9,68 +9,58 @@ class ConnectionPoint;
 
 namespace CityFunctions
 {
-    enum VectorSide
-    {
-        VECTOR_FRONT,
-        VECTOR_BACK,
-        VECTOR_INVALID_SIDE
-    };
 
-    std::string vectorSideToString(VectorSide side);
+    extern std::vector<std::string> pointNames;
+    extern std::vector<std::string> streetNames;
 
+    City* generateCity(const std::string& name, int pointCount);
     std::string getRandomName(std::vector<std::string>& names);
-    std::vector<std::string> getRandomNamesFromFile();
-    City* generateCity(const std::string& name, int maxStreetCount);
-    Street* createRootStreet(const std::string& name, City* city);
+    std::vector<std::string> readFile(const std::string& path);
+};
+
+enum Sides
+{
+    FRONT,
+    BACK
 };
 
 class ConnectionPoint
 {
 public: 
-    uint8_t weight;
-    std::vector<Street*> connectedTo;
+    std::string name;
+    uint8_t maxConnection;  // between 1-3
+    uint8_t weight;         // between 1-9
+    uint8_t cost;
+    bool isVisited;
+    std::vector<Street*> connections;
 
-    ConnectionPoint(Street* street);
+    ConnectionPoint();
 
     ~ConnectionPoint() = default;
 
     void removeConnection(Street* street);
     bool isStreetConnected(Street* street);
+    void calculateCost(uint8_t streetWeight);
+    void connectStreet(Street* street, Sides side);
 };
 
 class Street
 {
 public:
     std::string name;
-    std::vector<Street*> connectedStreetsFront;
-    std::vector<Street*> connectedStreetsBack;
-    uint8_t idealConnectionSize = 3;
-    uint8_t weight;
-    bool isFinished;
-    bool isRoot;
+    uint8_t weight;         // between 1-9
     ConnectionPoint* backPoint;
     ConnectionPoint* frontPoint;
 
-    Street() = default;
-    Street(const std::string& name);
+    Street();
 
     ~Street();
-
-    bool addStreetToBack(Street* street, bool addToTheOther);
-    bool addStreetToFront(Street* street, bool addToTheOther);
-
-    void createPointToStreet();
-
-    bool isStreetConnected(Street* street);
-    CityFunctions::VectorSide getEmptyVectorSide() const;
 };
 
 class City
 {
 public:
     std::string name;
-    std::vector<Street*> unfinishedStreets; 
-    Street* rootStreet;
     std::vector<Street*> streets;
     std::vector<ConnectionPoint*> points;
 
@@ -79,21 +69,16 @@ public:
 
     ~City();
 
-    int getUnfinishedCount() const;
-    Street* getFirstUnfinishedStreet();
-    Street* getMiddleUnfinishedStreet();
-
     void addStreet(Street* street);
-    void addUnfinishedStreet(Street* street);
-    void removeFinishedFromUnfinished();
-    void connectStreets();
-    void connectToRandomUnfinishedStreet(Street* street);
+    void addPoint(ConnectionPoint* point);
+    ConnectionPoint* getPointByName(const std::string& name);
+    ConnectionPoint* getRandomUnfinishedPoint(ConnectionPoint* targetPoint);
+    void connectPointToRandomPoint(ConnectionPoint* point);
+    std::vector<ConnectionPoint*> getShortestPath(const std::string& base, const std::string& destination);
+    bool isPointExist(const std::string& name);
+    void flipVisited();
 
-    void getShortestRoute(const std::string& from, const std::string& to, City* city);
-
-    void printAllStreetReferenceCount();
-
-    void printStreets(bool printConnected);
-    void printUnfinished();
+    void printPoints(bool details);
+    void printStreets(bool details);
 };
 
