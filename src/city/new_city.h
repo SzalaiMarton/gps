@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include "../../include/SFML/Graphics.hpp"
 
 class Street;
 class City;
@@ -24,12 +25,22 @@ enum Sides
     BACK
 };
 
-class ConnectionPoint
+class Object
+{
+public:
+    Object() = default;
+    virtual ~Object() = default;
+    
+    std::string name;
+    uint8_t weight;         // between 1-9
+    bool isDisplayed;
+    sf::Sprite* shape;
+};
+
+class ConnectionPoint : public Object
 {
 public: 
-    std::string name;
-    uint8_t maxConnection;  // between 1-3
-    uint8_t weight;         // between 1-9
+    uint8_t maxConnection;  // between 2-3
     uint8_t cost;
     bool isVisited;
     std::vector<Street*> connections;
@@ -38,19 +49,23 @@ public:
 
     ~ConnectionPoint() = default;
 
+    void removeRelatedPoint(ConnectionPoint* toBeRemoved, City* city);
     void removeConnection(Street* street);
     bool isStreetConnected(Street* street);
     void calculateCost(uint8_t streetWeight);
     void connectStreet(Street* street, Sides side);
+    void connectPoint(ConnectionPoint* point, City* city);
+    bool isPointAlreadyConnected(ConnectionPoint* point);
+    Street* getSharedStreet(ConnectionPoint* point);
 };
 
-class Street
+class Street : public Object
 {
 public:
-    std::string name;
-    uint8_t weight;         // between 1-9
     ConnectionPoint* backPoint;
     ConnectionPoint* frontPoint;
+    bool goFront;
+    bool goBack;
 
     Street();
 
@@ -70,15 +85,21 @@ public:
     ~City();
 
     void addStreet(Street* street);
+    void removeStreet(Street* street);
     void addPoint(ConnectionPoint* point);
     ConnectionPoint* getPointByName(const std::string& name);
     ConnectionPoint* getRandomUnfinishedPoint(ConnectionPoint* targetPoint);
+    ConnectionPoint* getRandomPoint();
+    ConnectionPoint* getLastCreatedPoint();
     void connectPointToRandomPoint(ConnectionPoint* point);
     std::vector<ConnectionPoint*> getShortestPath(const std::string& base, const std::string& destination);
     bool isPointExist(const std::string& name);
     void flipVisited();
+    void turnStreetsIntoLines();
+    void turnStreetsIntoVectors(ConnectionPoint* destination);
+    void movePointToTheBack(ConnectionPoint* point);
 
-    void printPoints(bool details);
+    void printPoints(bool details, bool relatedPoints);
     void printStreets(bool details);
 };
 

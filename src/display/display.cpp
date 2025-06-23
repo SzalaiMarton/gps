@@ -1,269 +1,174 @@
 #include "display.h"
 #include "assets.h"
+#include "../city/new_city.h"
+#include <iostream>
 
 namespace Display
 {
-	int width = 1000;
-	int height = width * (16 / 9);
-	sf::RenderWindow window(sf::VideoMode(width, height), "gps");
-
-	float xRootPosition = width / 2.f, yRootPosition = height / 2.f - 200.f;
+	sf::RenderWindow window = sf::RenderWindow(sf::VideoMode(800, 800 * (16 / 9)), "gps");
+	sf::View camera = sf::View(sf::FloatRect(0, 0, 800, 800 * (16 / 9)));
 }
 
-Display::ConnectionPoint::ConnectionPoint()
+void Display::refreshFrame(std::vector<City*> cities)
 {
-	this->connections = Display::ConnectionsToShape<Street*>();
-	this->shape = sf::Sprite();
-}
-
-void Display::ConnectionPoint::connectToShape(Street* connectTo, DisplaySide whereTo)
-{
-	if (this->connections.isEmpty())
+	Display::window.clear();
+	for (auto& city : cities)
 	{
-		DisplaySide connectionPoint_displaySide = Display::getOppositeSide(whereTo);
-
-		sf::Vector2f connectTo_sidePoint = Display::getSidePointsOfShape(&connectTo->shape, whereTo);
-		
-		this->connections.addConnection(connectionPoint_displaySide, connectTo);
-
-		//rotate connection point
-		Display::rotateShapeByFloat(&this->shape, connectTo->shape.getRotation());
-
-		Display::setOriginForShape(&this->shape, connectionPoint_displaySide);
-		this->shape.setPosition(connectTo_sidePoint.x, connectTo_sidePoint.y);
-
-		if (whereTo == FRONT)
-			connectTo->frontPoint = this;
-		else if (whereTo == BACK)
-			connectTo->backPoint = this;
-	}
-	else if (this->connections.size() != this->maxConnections)
-	{
-		DisplaySide connectionPoint_displaySide = this->getRandomFreeSide();
-
-		if (connectionPoint_displaySide == INVALID_SIDE)
+		for (auto& str : city->streets)
 		{
-			std::cout << connectTo->name << std::endl;
-			std::cout << this << std::endl;
-			std::cout << "Cannot add more side " << std::endl;
-			std::cout << "------------------------------" << std::endl;
-			return;
+			Display::window.draw(*str->shape);
 		}
-
-		Display::rotateShapeBySide(&connectTo->shape, connectionPoint_displaySide);
-		Display::rotateShapeForConnection(&connectTo->shape, &this->shape);
-
-		sf::Vector2f connectionPoint_sidePoint = Display::getSidePointsOfShape(&this->shape, connectionPoint_displaySide);
-
-		this->connections.addConnection(connectionPoint_displaySide, connectTo);
-		
-		Display::setOriginForShape(&connectTo->shape, Display::getOppositeSide(whereTo));
-		connectTo->shape.setPosition(connectionPoint_sidePoint.x, connectionPoint_sidePoint.y);
-	}
-}
-
-Display::DisplaySide Display::ConnectionPoint::getRandomFreeSide()
-{
-	if (this->connections.isFree(Display::LEFT))
-		return Display::LEFT;
-	else if (this->connections.isFree(Display::RIGHT))
-		return Display::RIGHT;
-	else if (this->connections.isFree(Display::FRONT))
-		return Display::FRONT;
-	else if (this->connections.isFree(Display::BACK))
-		return Display::BACK;
-	else
-		return Display::INVALID_SIDE;
-}
-
-Display::DisplaySide Display::ConnectionPoint::getWhereStreetConnected(Street* object)
-{
-	if (this == nullptr)
-		return INVALID_SIDE;
-
-	if (object == connections.left)
-		return LEFT;
-	else if (object == connections.right)
-		return RIGHT;
-	else if (object == connections.front)
-		return FRONT;
-	else if (object == connections.back)
-		return BACK;
-	else
-		return INVALID_SIDE;
-}
-
-Display::DisplaySide Display::ConnectionPoint::getWhereToConnectCloseStreets(Street* street)
-{
-	sf::Vector2f streetBackPoint = Display::getSidePointsOfShape(&street->shape, BACK);
-
-	sf::Vector2f c_pointBackPoint = Display::getSidePointsOfShape(&this->shape, BACK);
-	sf::Vector2f c_pointLeftPoint = Display::getSidePointsOfShape(&this->shape, LEFT);
-	sf::Vector2f c_pointRightPoint = Display::getSidePointsOfShape(&this->shape, RIGHT);
-
-	if (streetBackPoint == c_pointBackPoint)
-		return BACK;
-	else if (streetBackPoint == c_pointLeftPoint)
-		return LEFT;
-	else if (streetBackPoint == c_pointRightPoint)
-		return RIGHT;
-	else
-		return INVALID_SIDE;
-}
-
-short Display::getNumberFromSide(DisplaySide side)
-{
-	if (side == FRONT)
-		return 0;
-	else if (side == LEFT)
-		return 1;
-	else if (side == BACK)
-		return 2;
-	else if (side == RIGHT)
-		return 3;
-}
-
-Display::DisplaySide Display::convertNumberToDisplaySide(short number)
-{
-	if (number == -1)
-		number = 3;
-	else if (number == -2)
-		number = 2;
-	else if (number == -3)
-		number = 1;
-
-
-	if (number == 0)
-		return FRONT;
-	else if (number == 1)
-		return LEFT;
-	else if (number == 2)
-		return BACK;
-	else if (number == 3)
-		return RIGHT;
-}
-
-void Display::displayStreet(Street* street, City* city)
-{
-	street->isDisplayed = true;
-
-	if (street->isRoot)
-	{
-		street->shape.setTexture(*Assets::getObjectTexture(Assets::rootTextureName));
-		street->shape.setPosition(xRootPosition, yRootPosition);
-	}
-	else // get where to snap it
-	{
-		street->shape.setTexture(*Assets::getObjectTexture(Assets::streetTextureName));
-
-		Street* parentStreet = CityFunctions::getWhereToConnectStreet(street);
-
-		DisplaySide displaySide = Display::convertVectorSideToDisplaySide(CityFunctions::getWhereToSnap(street, parentStreet));
-
-		ConnectionPoint* parentStreet_ConnectionPoint = Display::getExistingConnectionPoint(parentStreet, displaySide);
-		if (parentStreet_ConnectionPoint == nullptr)
-			parentStreet_ConnectionPoint = Display::createConnectionPoint();
-
-		parentStreet_ConnectionPoint->connectToShape(street, BACK);
-		street->frontPoint = parentStreet_ConnectionPoint;
-
-		ConnectionPoint* closestPoint = Display::checkForClosePointsAtBack(city, street, BACK);
-		if (closestPoint != nullptr)
+		for (auto& point : city->points)
 		{
-			std::cout << "near point found at: " << street->name << " with the address of: " << closestPoint << std::endl;
-
-			street->backPoint = closestPoint;
+			Display::window.draw(*point->shape);
 		}
 	}
-
-	Display::createPointsToStreet(street);
-
-	window.draw(street->shape);
+	Display::window.display();
 }
 
 void Display::displayCity(City* city)
 {
+	int tryCount = 0;
+	for (auto& point : city->points)
+	{
+		tryCount = 0;
+		Display::displayPoint(point, city, true, tryCount);
+	}
+	/*for (auto& str : city->streets)
+	{
+		std::cout << "displaying " << str->name << std::endl;
+		Display::displayStreet(str);
+	}*/
+}
+
+void Display::displayPoint(ConnectionPoint* point, City* city, bool tryAgain, int& tryCount)
+{
+	point->shape->setTexture(*Assets::getObjectTexture(Assets::pointTextureName));
+
+	ConnectionPoint* relatedPoint = nullptr;
+	Display::getDisplayedRelatedPoint(point, &relatedPoint);
+	if (relatedPoint == nullptr) // if relatedPoint is null that means this is the first point to be displayed
+	{
+		point->shape->setPosition(0.f, 0.f);
+		point->isDisplayed = true;
+	}
+	else
+	{
+		// check if fits in the radius, if not place it further
+		sf::Vector2f* pos = Display::convertDirectionToCord(relatedPoint->shape, Display::checkRadiusForDirection(relatedPoint->shape, city));
+		if (pos == nullptr)
+		{
+			if (tryAgain)
+				Display::movePointToAnotherPoint(point, relatedPoint, city, tryCount);
+			else
+			{
+				std::cout << "pos was null after the " << tryCount << " try" << std::endl;
+			}
+			return;
+		}
+		point->shape->setPosition(*pos);
+		delete pos;
+		point->isDisplayed = true;
+	}
+	Display::window.draw(*point->shape);
+}
+
+void Display::displayStreet(Street* street)
+{
+	street->shape->setTexture(*Assets::getObjectTexture(Assets::streetTextureName));
+
+	// get the two points of the front and backPoint
+	sf::Vector2f cordBack = street->backPoint->shape->getPosition();
+	sf::Vector2f cordFront = street->frontPoint->shape->getPosition();
+
+	// place it to the smaller cord
+	street->shape->setOrigin(Display::getSidePointOfShape(street->shape, BACK));
+	street->shape->setPosition(*Display::getSmallerVector2f(&cordBack, &cordFront));
+	
+	// get stretch length
+	float xLength = abs(cordBack.x - cordFront.x);
+	float yLength = abs(cordBack.y - cordFront.y);
+
+	// calculate rotation
+	float angle = yLength / xLength;
+	std::cout << "angle: " << angle << std::endl;
+	street->shape->setRotation(angle);
+
+	
+	std::cout << "xLength: " << xLength << std::endl;
+	std::cout << "yLength: " << yLength << std::endl;
+	Display::stretchObject(street->shape, xLength, yLength);
+
+	
+}
+
+void Display::getDisplayedRelatedPoint(ConnectionPoint* point, ConnectionPoint** relatedPoint)
+{
+	for (auto& str : point->connections)
+	{
+		if (str->backPoint != nullptr && str->backPoint != point && str->backPoint->isDisplayed)
+			*relatedPoint = str->backPoint;
+		if (str->frontPoint != nullptr && str->frontPoint != point && str->frontPoint->isDisplayed)
+			*relatedPoint = str->frontPoint;
+	}
+}
+
+Object* Display::isSomethingInTheWay(sf::Vector2f* smaller, sf::Vector2f* greater, City* city)
+{
+	for (auto& point : city->points)
+	{
+		const sf::Vector2f& currentPointPos = point->shape->getPosition();
+		if ((currentPointPos.x <= greater->x && currentPointPos.y <= greater->y) && (currentPointPos.x >= smaller->x && currentPointPos.y >= smaller->y))
+		{
+			return point;
+		}
+	}
 	for (auto& str : city->streets)
 	{
-		if (str->connectedStreetsBack.empty() && str->connectedStreetsFront.empty())
+		const sf::Vector2f& currentStrPos = str->shape->getPosition();
+		if ((currentStrPos.x <= greater->x && currentStrPos.y <= greater->y) && (currentStrPos.x >= smaller->x && currentStrPos.y >= smaller->y))
 		{
-			continue;
-		}
-		Display::displayStreet(str, city);
-	}
-
-	Display::rearragneStreetsByCords(city);
-
-	Display::window.display();
-}
-
-void Display::refreshFrame(const std::vector<City*>& citiesDisplay)
-{
-	window.clear();
-
-	for (const auto& city : citiesDisplay)
-	{
-		for (const auto& str : city->streets)
-		{
-			window.draw(str->shape);
-			if (str->frontPoint)
-			{
-				window.draw(str->frontPoint->shape);
-			}
-			if (str->backPoint)
-			{
-				window.draw(str->backPoint->shape);
-			}
+			return str;
 		}
 	}
-	window.display();
+	return nullptr;
 }
 
-sf::Vector2f Display::getSidePointsOfShape(sf::Sprite* shape, DisplaySide side)
+sf::Vector2f* Display::getSmallerVector2f(sf::Vector2f* pos1, sf::Vector2f* pos2)
 {
-	// correcting side according to rotation
-	side = Display::convertNumberToDisplaySide(Display::getNumberFromSide(side) - (int)shape->getRotation() / 90.f);
-
-	switch (side)
-	{
-	case Display::BACK:
-	{
-		sf::Vector2f botLeft = Display::getBotLeft(shape);
-		sf::Vector2f botRight = Display::getBotRight(shape);
-		return Display::calculateMiddlePoint(botLeft, botRight);
-	}
-	case Display::FRONT:
-	{
-		sf::Vector2f topLeft = Display::getTopLeft(shape);
-		sf::Vector2f topRight = Display::getTopRight(shape);
-		return Display::calculateMiddlePoint(topLeft, topRight);
-	}
-	case Display::LEFT:
-	{
-		sf::Vector2f topLeft = Display::getTopLeft(shape);
-		sf::Vector2f botLeft = Display::getBotLeft(shape);
-		return Display::calculateMiddlePoint(topLeft, botLeft);
-	}
-	case Display::RIGHT:
-	{
-		sf::Vector2f topRight = Display::getTopRight(shape);
-		sf::Vector2f botRight = Display::getBotRight(shape);
-		return Display::calculateMiddlePoint(topRight, botRight);
-	}
-	}
+	if (pos1->x < pos2->x && pos1->y < pos2->y)
+		return pos1;
+	else
+		return pos2;
 }
 
-void Display::setOriginForShape(sf::Sprite* shape, DisplaySide side)
+sf::Vector2f* Display::getGreaterVector2f(sf::Vector2f* pos1, sf::Vector2f* pos2)
 {
-	sf::FloatRect bounds = shape->getLocalBounds();
+	if (pos1->x > pos2->x && pos1->y > pos2->y)
+		return pos1;
+	else
+		return pos2;
+}
+
+sf::Vector2f Display::getSidePointOfShape(sf::Sprite* shape, DisplaySide side)
+{
+	if (side == FRONT)
+	{
+		return sf::Vector2f(Display::getMiddlePoint(Display::getTopLeft(shape), Display::getTopRight(shape)));
+	}
+	if (side == BACK)
+	{
+		return sf::Vector2f(Display::getMiddlePoint(Display::getBotLeft(shape), Display::getBotRight(shape)));
+	}
 	if (side == LEFT)
-		shape->setOrigin(bounds.left, bounds.height / 2);
-	else if (side == BACK)
-		shape->setOrigin(bounds.width / 2, bounds.height);
-	else if (side == RIGHT)
-		shape->setOrigin(bounds.width, bounds.height / 2);
-	else if (side == FRONT)
-		shape->setOrigin(bounds.width / 2, bounds.top);
+	{
+		return sf::Vector2f(Display::getMiddlePoint(Display::getTopLeft(shape), Display::getBotLeft(shape)));
+	}
+	if (side == RIGHT)
+	{
+		return sf::Vector2f(Display::getMiddlePoint(Display::getTopRight(shape), Display::getBotRight(shape)));
+	}
+	return sf::Vector2f(0.f,0.f);
 }
 
 sf::Vector2f Display::getTopLeft(sf::Sprite* shape)
@@ -290,243 +195,223 @@ sf::Vector2f Display::getBotRight(sf::Sprite* shape)
 	return sf::Vector2f(bounds.left + bounds.width, bounds.top + bounds.height);
 }
 
-float Display::getSmallerNumber(const float number1, const float number2)
+sf::Vector2f Display::getMiddlePoint(const sf::Vector2f& point1, const sf::Vector2f& point2)
 {
-	if (number1 < number2)
-	{
-		return number1;
-	}
-	else if (number1 > number2)
-	{
-		return number2;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-Display::DisplaySide Display::getOppositeSide(DisplaySide side)
-{
-	switch (side)
-	{
-	case Display::BACK:
-		return Display::FRONT;
-	case Display::FRONT:
-		return Display::BACK;
-	case Display::LEFT:
-		return Display::RIGHT;
-	case Display::RIGHT:
-		return Display::LEFT;
-	default:
-		return Display::INVALID_SIDE;
-	}
-}
-
-Display::ConnectionPoint* Display::getExistingConnectionPoint(Street* street, DisplaySide side)
-{
-	if (street == nullptr)
-		return nullptr;
-
-	if (street->frontPoint && side == FRONT)
-	{
-		return street->frontPoint;
-	}
-	else if (street->backPoint && side == BACK)
-	{
-		return street->backPoint;
-	}
-	return nullptr;
-}
-
-Display::ConnectionPoint* Display::checkForClosePointsAtBack(City* city, Street* street, DisplaySide side)
-{
-	sf::Vector2f streetBackPoint = Display::getSidePointsOfShape(&street->shape, Display::DisplaySide::BACK);
-
-	for (const auto& str : city->streets)
-	{
-		if (str->backPoint != nullptr && side == BACK && str->backPoint->shape.getGlobalBounds().contains(streetBackPoint))
-		{
-			return str->backPoint;
-		}
-	}
-	return nullptr;
-}
-
-void Display::createPointsToStreet(Street* street)
-{
-	if (street->isRoot)
-	{
-		street->frontPoint = Display::createConnectionPoint();
-		street->backPoint = Display::createConnectionPoint();
-		Display::rotateShapeByFloat(&street->frontPoint->shape, street->shape.getRotation());
-		Display::rotateShapeByFloat(&street->backPoint->shape, street->shape.getRotation());
-
-		street->frontPoint->connectToShape(street, Display::FRONT);
-		street->backPoint->connectToShape(street, Display::BACK);
-		
-		Display::window.draw(street->frontPoint->shape);
-		Display::window.draw(street->backPoint->shape);
-
-		std::cout << "created front and back point for: " << street->name << std::endl;
-	}
-	else if (street->backPoint == nullptr)
-	{
-		street->backPoint = Display::createConnectionPoint();
-		Display::rotateShapeByFloat(&street->backPoint->shape, street->shape.getRotation());
-
-		street->backPoint->connectToShape(street, Display::BACK);
-		
-		Display::window.draw(street->backPoint->shape);
-		
-		std::cout << "created back point for: " << street->name << std::endl;
-	}
-	else if (street->frontPoint == nullptr)
-	{
-		street->frontPoint = Display::createConnectionPoint();
-		Display::rotateShapeByFloat(&street->frontPoint->shape, street->shape.getRotation());
-
-		street->frontPoint->connectToShape(street, Display::FRONT);
-		
-		Display::window.draw(street->frontPoint->shape);
-		
-		std::cout << "created front point for: " << street->name << std::endl;
-	}
-}
-
-Display::ConnectionPoint* Display::createConnectionPoint()
-{
-	ConnectionPoint* res = new ConnectionPoint();
-	res->shape.setTexture(*Assets::getObjectTexture(Assets::pointTextureName));
-	return res;
-}
-
-Display::DisplaySide Display::convertVectorSideToDisplaySide(CityFunctions::VectorSide side)
-{
-	if (side == CityFunctions::VECTOR_BACK)
-	{
-		return Display::BACK;
-	}
-	else
-	{
-		return Display::FRONT;
-	}
-}
-
-sf::Vector2f Display::calculateMiddlePoint(const sf::Vector2f& point1, const sf::Vector2f& point2)
-{
-	sf::Vector2f smaller = sf::Vector2f(Display::getSmallerNumber(point1.x, point2.x), Display::getSmallerNumber(point1.y, point2.y));
+	sf::Vector2f smaller(Display::getSmallerFloat(point1.x, point2.x), Display::getSmallerFloat(point1.y, point2.y));
 
 	smaller.x += abs(point1.x - point2.x) / 2.f;
 	smaller.y += abs(point1.y - point2.y) / 2.f;
 
 	if (point1.x == point2.x)
-	{
 		smaller.x = point1.x;
-	}
 	if (point1.y == point2.y)
-	{
 		smaller.y = point1.y;
-	}
 
 	return smaller;
 }
 
-void Display::rotateShapeBySide(sf::Sprite* shape, DisplaySide side)
+sf::Vector2f* Display::convertDirectionToCord(sf::Sprite* shape, const std::vector<Display::DisplaySide>& directions)
 {
-	if (side == Display::LEFT)
-		shape->setRotation(90.f);
-	else if(side == Display::FRONT)
-		shape->setRotation(180.f);
-	else if (side == Display::RIGHT)
-		shape->setRotation(270.f);
+	// from the vector grab the first element and convert it into a cord relative to the relatedPoint's pos
+	if (directions.empty())
+		return nullptr;
+
+	sf::Vector2f pos = shape->getPosition();
+	float xT = 0.f, yT = 0.f;
+	Display::getTransformatorBySide(directions[0], xT, yT);
+
+	return new sf::Vector2f(pos.x + (Display::getXRadiusBound() * xT), pos.y + (Display::getYRadiusBound() * yT));
+}
+
+std::vector<Display::DisplaySide> Display::checkRadiusForDirection(sf::Sprite* shape, City* city)
+{
+	// check all four side and pop related point sides
+	std::vector<Display::DisplaySide> directions{};
+
+	// RIGHT
+	checkRadiusSides(1.f, 0.f, shape, city, directions);
+	// LEFT
+	checkRadiusSides(-1.f, 0.f, shape, city, directions);
+	// BACK
+	checkRadiusSides(0.f, 1.f, shape, city, directions);
+	// FRONT
+	checkRadiusSides(0.f, -1.f, shape, city, directions);
+	
+	// FRONT RIGHT
+	checkRadiusSides(2.f, -2.f, shape, city, directions);
+	// FRONT LEFT
+	checkRadiusSides(-2.f, -2.f, shape, city, directions);
+	// BACK RIGHT
+	checkRadiusSides(2.f, 2.f, shape, city, directions);
+	// BACK LEFT
+	checkRadiusSides(-2.f, 2.f, shape, city, directions);
+
+	return directions;
+}
+
+void Display::checkRadiusSides(const float& xT, const float& yT, sf::Sprite* shape, City* city, std::vector<Display::DisplaySide>& directions)
+{
+	sf::Vector2f shapePos = shape->getPosition();
+	sf::Vector2f radiusBound(0.f, 0.f);
+
+	radiusBound.x = shapePos.x + (Display::getXRadiusBound() * xT);
+	radiusBound.y = shapePos.y + (Display::getYRadiusBound() * yT);
+
+	Object* obj = Display::isSomethingInTheWay(Display::getSmallerVector2f(&shapePos, &radiusBound), Display::getGreaterVector2f(&shapePos, &radiusBound), city);
+	if (obj == nullptr)
+		directions.emplace_back(Display::getSideByTransformators(xT, yT));
+}
+
+Display::DisplaySide Display::getSideByTransformators(const float& xT, const float& yT)
+{
+	if (xT == 1.f && yT == 0.f)
+		return RIGHT;
+	else if (xT == -1.f && yT == 0.f)
+		return LEFT;
+	else if (xT == 0.f && yT == 1.f)
+		return BACK;
+	else if (xT == 0.f && yT == -1.f)
+		return FRONT;
+
+	else if (xT == 2.f && yT == 2.f)
+		return BACK_RIGHT;
+	else if (xT == -2.f && yT == 2.f)
+		return BACK_LEFT;
+	else if (xT == 2.f && yT == -2.f)
+		return FRONT_RIGHT;
+	else if (xT == -2.f && yT == -2.f)
+		return FRONT_LEFT;
 	else
-		shape->setRotation(0.f);
+		return INVALID_SIDE;
 }
 
-void Display::rotateShapeByFloat(sf::Sprite* shape, const float& amount)
+void Display::getTransformatorBySide(Display::DisplaySide side, float& xT, float& yT)
 {
-	shape->setRotation(amount);
-}
-
-void Display::rotateShapeForConnection(sf::Sprite* shape, sf::Sprite* connectTo)
-{
-	shape->rotate(connectTo->getRotation());
-}
-
-void Display::rearragneStreetsByCords(City* city)
-{
-	std::vector<Street*> holderForStreetsBack{};
-	std::vector<Street*> holderForStreetsFront{};
-
-	for (const auto& str1 : city->streets)
+	if (side == RIGHT)
 	{
-		for (const auto& str2 : city->streets)
-		{
-			if (str1 == str2)
-				continue;
-
-			sf::FloatRect str1Bounds = str1->shape.getGlobalBounds();
-			sf::FloatRect str2Bounds = str2->shape.getGlobalBounds();
-
-			if (str1Bounds.top / 2 == str2Bounds.top / 2 && str1Bounds.width / 2 == str2Bounds.width / 2)
-			{
-				str2->removeStreetFromNeighbors(holderForStreetsBack, holderForStreetsFront);
-				city->connectToRandomUnfinishedStreet(str2);
-				str1->addStreetToNewNeighbors(holderForStreetsBack, holderForStreetsFront);
-
-				holderForStreetsBack.clear();
-				holderForStreetsFront.clear();
-			}
-		}
+		xT = 1.f;
+		yT = 0.f;
 	}
-	Display::displayNotDisplayed(city);
+	else if (side == LEFT)
+	{
+		xT = -1.f;
+		yT = 0.f;
+	}
+	else if (side == BACK)
+	{
+		xT = 0.f;
+		yT = 1.f;
+	}
+	else if (side == FRONT)
+	{
+		xT = 0.f;
+		yT = -1.f;
+	}
 
-	std::cout << Display::printSameStreetCords(city) << std::endl;
+	else if (side == BACK_RIGHT)
+	{
+		xT = 2.f;
+		yT = 2.f;
+	}
+	else if (side == BACK_LEFT)
+	{
+		xT = -2.f;
+		yT = 2.f;
+	}
+	else if (side == FRONT_RIGHT)
+	{
+		xT = 2.f;
+		yT = -2.f;
+	}
+	else if (side == FRONT_LEFT)
+	{
+		xT = -2.f;
+		yT = -2.f;
+	}
 }
 
-void Display::displayNotDisplayed(City* city)
+float Display::getSmallerFloat(const float number1, const float number2)
+{
+	if (number1 < number2)
+		return number1;
+	else if (number1 > number2)
+		return number2;
+	else
+		return 0;
+}
+
+float Display::getXRadiusBound()
+{
+	return Assets::streetSizeY * 2.f;
+}
+
+float Display::getYRadiusBound()
+{
+	return Assets::streetSizeY * 2.f;
+}
+
+Object* Display::getObjectByMouse(const sf::Vector2i mousePos, City* city)
 {
 	for (auto& str : city->streets)
 	{
-		if (!str->isDisplayed)
-			Display::displayStreet(str, city);
+		if (str->shape->getGlobalBounds().contains((float)mousePos.x, (float)mousePos.y))
+			return str;
 	}
+	for (auto& point : city->points)
+	{
+		if (point->shape->getGlobalBounds().contains((float)mousePos.x, (float)mousePos.y))
+			return point;
+	}
+	return nullptr;
 }
 
-int Display::printSameStreetCords(City* city)
+void Display::stretchObject(sf::Sprite* shape, float xScale, float yScale)
 {
-	int index = 0;
+	if (xScale == 0.f)
+		xScale = 1.f;
+	if (yScale == 0.f)
+		yScale = 1.f;
 
-	for (const auto& str1 : city->streets)
+	shape->setScale(xScale / shape->getGlobalBounds().width, yScale / shape->getGlobalBounds().height);
+}
+
+void  Display::movePointToAnotherPoint(ConnectionPoint* toBeRemoved, ConnectionPoint* relatedPoint, City* city, int& tryCount)
+{
+	relatedPoint->removeRelatedPoint(toBeRemoved, city);
+	//city->getLastCreatedPoint()->connectPoint(toBeRemoved, city);
+	city->getRandomPoint()->connectPoint(toBeRemoved, city);
+	city->movePointToTheBack(toBeRemoved);
+	
+	if (tryCount < 5)
 	{
-		for (const auto& str2 : city->streets)
-		{
-			if (str1 == str2)
-				continue;
-			else if (str1->shape.getGlobalBounds().contains(str2->shape.getPosition()))
-			{
-				std::cout << "pos match at: x: " << str1->shape.getPosition().x << " y: " << str1->shape.getPosition().y << " names: " << str1->name << " " << str2->name << std::endl;
-				index++;
-				break;
-			}
-		}
+		tryCount++;
+		Display::displayPoint(toBeRemoved, city, true, tryCount);
 	}
-	return index;
+	else
+		Display::displayPoint(toBeRemoved, city, false, tryCount);
 }
 
 std::string Display::sideToString(DisplaySide side)
 {
-	if (side == FRONT)
-		return "front";
-	else if (side == BACK)
-		return "back";
-	else if (side == RIGHT)
+	switch (side)
+	{
+	case RIGHT:
 		return "right";
-	else if (side == LEFT)
+	case LEFT:
 		return "left";
-	else if (side == INVALID_SIDE)
-		return "INVALID_SIDE";
-	else
-		return "none";
+	case FRONT:
+		return "front";
+	case BACK:
+		return "back";
+	case FRONT_RIGHT:
+		return "front_right";
+	case FRONT_LEFT:
+		return "front_left";
+	case BACK_LEFT:
+		return "back_left";
+	case BACK_RIGHT:
+		return "back_right";
+	default:
+		return "invalid_side";
+	}
 }

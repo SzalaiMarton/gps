@@ -1,20 +1,29 @@
 #include "assets.h"
+#include <filesystem>
+#include <iostream>
 
 namespace Assets
 {
     std::string path = "res\\";
     float shapeScale = 1.f;
+    float pointSize = 0.f;
+    float streetSizeX = 0.f;
+    float streetSizeY = 0.f;
     std::vector<ObjectTexture*> textureVector = {};
     std::string streetTextureName = "s_street_marked";
     std::string rootTextureName = "s_street_marked";
-    std::string pointTextureName = "marked_point";
+    std::string pointTextureName = "connection_point";
 }
 
 Assets::ObjectTexture::ObjectTexture(const std::string& name, sf::Texture* texture)
 {
 	this->name = name;
 	this->texture = texture;
-	this->texture = texture;
+}
+
+Assets::ObjectTexture::~ObjectTexture()
+{
+    delete this->texture;
 }
 
 void Assets::loadDirectoryElements()
@@ -27,6 +36,7 @@ void Assets::loadDirectoryElements()
         temp->loadFromFile(tex);
         Assets::textureVector.emplace_back(new Assets::ObjectTexture(text, temp));
     }
+    Assets::storeTextureSizes();
 }
 
 std::vector<std::string> Assets::getDirectoryContents(const std::string& path) 
@@ -57,4 +67,13 @@ sf::Texture* Assets::getObjectTexture(const std::string& name)
         }
     }
     return nullptr;
+}
+
+void Assets::storeTextureSizes()
+{
+    sf::Texture* texture = Assets::getObjectTexture(Assets::streetTextureName);
+    Assets::streetSizeX = texture->getSize().x * Assets::shapeScale;
+    Assets::streetSizeY = texture->getSize().y * Assets::shapeScale;
+    texture = Assets::getObjectTexture(Assets::pointTextureName);
+    Assets::pointSize = texture->getSize().x * Assets::shapeScale;
 }

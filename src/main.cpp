@@ -1,42 +1,25 @@
 #include "city/new_city.h"
 #include <iostream>
-//#include "display/display.h"
-//#include "display/assets.h"
+#include "display/assets.h"
+#include "display/display.h"
 
 int main()
 {
-    //Assets::loadDirectoryElements();
-    
-    City* Berlin = CityFunctions::generateCity("Berlin", 25); // 800 street limit -> no names left, dont want streets with the same name
+    bool isDragging = false;
+    sf::Vector2i lastMousePos{};
 
-    Berlin->printPoints(false);
+    Assets::loadDirectoryElements();
+    
+    City* Berlin = CityFunctions::generateCity("Berlin", 800); // 800 point limit -> no names left, dont want points with the same name
+
+    Display::displayCity(Berlin);
+
+    std::cout << "points count: " << Berlin->points.size() << " streets count: " << Berlin->streets.size() << std::endl;
+
+    //Berlin->printPoints(false, true);
     //Berlin->printStreets(true);
 
-    while (true)
-    {
-        std::string from;
-        std::string to;
-
-        std::cout << "Get the shortest route between: \n(from)\n(to)" << std::endl;
-        //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::getline(std::cin, from);
-        std::getline(std::cin, to);
-
-        std::vector<ConnectionPoint*> path = Berlin->getShortestPath(from, to);
-        
-        for (int i = 0; i < path.size(); i++)
-        {
-            if (i == path.size() - 1)
-                std::cout << path[i]->name;
-            else
-                std::cout << path[i]->name << "->";
-        }
-        std::cout << std::endl;
-    }
-
-    delete Berlin;
-
-    /*while (Display::window.isOpen())
+    while (Display::window.isOpen())
     {
         sf::Event event;
         while (Display::window.pollEvent(event))
@@ -45,7 +28,56 @@ int main()
             {
                 Display::window.close();
             }
-            Display::refreshFrame({ Berlin });
+
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
+            {
+                isDragging = true;
+                lastMousePos = sf::Mouse::getPosition(Display::window);
+
+                Object* obj = Display::getObjectByMouse(lastMousePos, Berlin);
+                Street* currentStr = dynamic_cast<Street*>(obj);
+                ConnectionPoint* currentPoint = dynamic_cast<ConnectionPoint*>(obj);
+                if (currentPoint != nullptr)
+                    std::cout << "current point: " << currentPoint->name << std::endl;
+                else if (currentStr != nullptr)
+                    std::cout << "current str: " << currentStr->name << std::endl;
+            }
+            if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
+            {
+                isDragging = false;
+            }
+
+            if (event.type == sf::Event::MouseWheelScrolled) 
+            {
+                if (event.mouseWheelScroll.delta > 0)
+                {
+                    Display::camera.zoom(0.9f);
+                    Display::window.setView(Display::camera);
+                }
+                else
+                {
+                    Display::camera.zoom(1.1f);
+                    Display::window.setView(Display::camera);
+                }
+            }
         }
-    }*/
+
+        if (isDragging)
+        {
+            sf::Vector2i mousePos = sf::Mouse::getPosition(Display::window);
+            sf::Vector2f delta = Display::window.mapPixelToCoords(lastMousePos) - Display::window.mapPixelToCoords(mousePos);
+            Display::camera.move(delta);
+            lastMousePos = mousePos;
+            Display::window.setView(Display::camera);
+        }
+
+        Display::refreshFrame({ Berlin });
+    }
+
+    delete Berlin;
+    for (auto texture : Assets::textureVector)
+    {
+        delete texture;
+    }
+    Assets::textureVector.clear();
 }
