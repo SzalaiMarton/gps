@@ -43,14 +43,17 @@ public:
     uint8_t maxConnection;  // between 2-3
     uint8_t cost;
     bool isVisited;
-    std::vector<Street*> connections;
+    bool noSpaceAround;
+    std::vector<Street*> connectedStreets;
+    std::vector<ConnectionPoint*> connectedPoints;
 
     ConnectionPoint();
 
-    ~ConnectionPoint() = default;
+    ~ConnectionPoint();
 
     void removeRelatedPoint(ConnectionPoint* toBeRemoved, City* city);
-    void removeConnection(Street* street);
+    void removeStreet(Street* street);
+    void removePoint(ConnectionPoint* point);
     bool isStreetConnected(Street* street);
     void calculateCost(uint8_t streetWeight);
     void connectStreet(Street* street, Sides side);
@@ -78,6 +81,7 @@ public:
     std::string name;
     std::vector<Street*> streets;
     std::vector<ConnectionPoint*> points;
+    std::vector<ConnectionPoint*> toBeMovedPoints;
 
     City() = default;
     City(const std::string& name);
@@ -88,18 +92,15 @@ public:
     void removeStreet(Street* street);
     void addPoint(ConnectionPoint* point);
     ConnectionPoint* getPointByName(const std::string& name);
-    ConnectionPoint* getRandomUnfinishedPoint(ConnectionPoint* targetPoint);
     ConnectionPoint* getRandomPoint();
     ConnectionPoint* getLastCreatedPoint();
-    void connectPointToRandomPoint(ConnectionPoint* point);
+    void connectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2 = nullptr);
     std::vector<ConnectionPoint*> getShortestPath(const std::string& base, const std::string& destination);
     bool isPointExist(const std::string& name);
     void flipVisited();
     void turnStreetsIntoLines();
     void turnStreetsIntoVectors(ConnectionPoint* destination);
-    void movePointToTheBack(ConnectionPoint* point);
 
     void printPoints(bool details, bool relatedPoints);
     void printStreets(bool details);
 };
-

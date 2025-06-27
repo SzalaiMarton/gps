@@ -10,7 +10,7 @@ int main()
 
     Assets::loadDirectoryElements();
     
-    City* Berlin = CityFunctions::generateCity("Berlin", 800); // 800 point limit -> no names left, dont want points with the same name
+    City* Berlin = CityFunctions::generateCity("Berlin", 100); // 800 point limit -> no names left, dont want points with the same name
 
     Display::displayCity(Berlin);
 
@@ -34,13 +34,25 @@ int main()
                 isDragging = true;
                 lastMousePos = sf::Mouse::getPosition(Display::window);
 
-                Object* obj = Display::getObjectByMouse(lastMousePos, Berlin);
+                sf::Vector2f mouseWorldPos = Display::window.mapPixelToCoords(lastMousePos);
+                Object* obj = Display::getObjectByMouse((sf::Vector2i)mouseWorldPos, Berlin);
                 Street* currentStr = dynamic_cast<Street*>(obj);
                 ConnectionPoint* currentPoint = dynamic_cast<ConnectionPoint*>(obj);
                 if (currentPoint != nullptr)
+                {
                     std::cout << "current point: " << currentPoint->name << std::endl;
-                else if (currentStr != nullptr)
+                    std::cout << "maxConnections: " << (int)currentPoint->maxConnection << "\n" << std::endl;
+                }
+                if (currentStr != nullptr)
+                {
                     std::cout << "current str: " << currentStr->name << std::endl;
+
+                    if (currentStr->backPoint)
+                        std::cout << "backName: " << currentStr->backPoint->name << std::endl;
+                    if (currentStr->frontPoint)
+                        std::cout << "frontPoint: " << currentStr->frontPoint->name << std::endl;
+                    std::cout << std::endl;
+                }
             }
             if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
             {

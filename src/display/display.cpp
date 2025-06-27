@@ -2,6 +2,8 @@
 #include "assets.h"
 #include "../city/new_city.h"
 #include <iostream>
+#include <cmath>
+#include <random>
 
 namespace Display
 {
@@ -28,97 +30,143 @@ void Display::refreshFrame(std::vector<City*> cities)
 
 void Display::displayCity(City* city)
 {
-	int tryCount = 0;
+	ConnectionPoint* firstPoint = *city->points.begin();
+	firstPoint->shape->setPosition(0.f,0.f);
+	firstPoint->isDisplayed = true;
+
 	for (auto& point : city->points)
 	{
-		tryCount = 0;
-		Display::displayPoint(point, city, true, tryCount);
+		Display::displayPoint(point, city);
 	}
+	std::cout << "----------------------------------------" << std::endl;
+
+	bool found = false;
+	do
+	{
+		found = false;
+		std::cout << city->toBeMovedPoints.size() << std::endl;
+		for (auto& point : city->toBeMovedPoints)
+		{
+			city->connectTwoPoints(point);
+			Display::displayPoint(point, city);
+
+			if (point->shape->getPosition().x != 0.f && point->shape->getPosition().y != 0.f)
+			{
+				for (int i = 0; i < city->toBeMovedPoints.size(); i++)
+				{
+					if (city->toBeMovedPoints[i] == point)
+					{
+						city->toBeMovedPoints.erase(city->toBeMovedPoints.begin() + i);
+						found = true;
+						break;
+					}
+				}
+			}
+
+			if (found)
+				break;
+		}
+	} while (!city->toBeMovedPoints.empty());
+
+
 	/*for (auto& str : city->streets)
 	{
-		std::cout << "displaying " << str->name << std::endl;
 		Display::displayStreet(str);
 	}*/
+
+	for (auto it = city->streets.begin(); it != city->streets.end(); ) {
+		Street* street = *it;
+		if (street->backPoint == nullptr && street->frontPoint == nullptr) 
+		{
+			delete street;
+			it = city->streets.erase(it);
+		}
+		else 
+		{
+			++it;
+		}
+	}
 }
 
-void Display::displayPoint(ConnectionPoint* point, City* city, bool tryAgain, int& tryCount)
+void Display::displayPoint(ConnectionPoint* point, City* city)
 {
-	point->shape->setTexture(*Assets::getObjectTexture(Assets::pointTextureName));
+	ConnectionPoint* relatedPoint = Display::getDisplayedRelatedPoint(point);
 
-	ConnectionPoint* relatedPoint = nullptr;
-	Display::getDisplayedRelatedPoint(point, &relatedPoint);
-	if (relatedPoint == nullptr) // if relatedPoint is null that means this is the first point to be displayed
+	if (relatedPoint == nullptr)
 	{
-		point->shape->setPosition(0.f, 0.f);
-		point->isDisplayed = true;
+		std::cout << point->name << "'s related was null" << std::endl;
+		return;
 	}
-	else
+
+	sf::Vector2f* pos = Display::convertDirectionToCord(relatedPoint->shape, Display::checkRadiusForDirection(relatedPoint->shape, city));
+	if (pos == nullptr)
 	{
-		// check if fits in the radius, if not place it further
-		sf::Vector2f* pos = Display::convertDirectionToCord(relatedPoint->shape, Display::checkRadiusForDirection(relatedPoint->shape, city));
-		if (pos == nullptr)
-		{
-			if (tryAgain)
-				Display::movePointToAnotherPoint(point, relatedPoint, city, tryCount);
-			else
-			{
-				std::cout << "pos was null after the " << tryCount << " try" << std::endl;
-			}
-			return;
-		}
-		point->shape->setPosition(*pos);
-		delete pos;
-		point->isDisplayed = true;
+		std::cout << point->name << "'s pos null" << std::endl;
+		relatedPoint->removeRelatedPoint(point, city);
+		city->toBeMovedPoints.emplace_back(point);
+		return;
 	}
+
+	point->shape->setTexture(*Assets::getObjectTexture(Assets::pointTextureName));
+	point->shape->setOrigin(point->shape->getGlobalBounds().width / 2.f, point->shape->getGlobalBounds().height / 2.f);
+	point->shape->setPosition(*pos);
+	delete pos;
+	point->isDisplayed = true;
 	Display::window.draw(*point->shape);
+	Display::window.display();
+
+	return;
 }
 
 void Display::displayStreet(Street* street)
 {
-	street->shape->setTexture(*Assets::getObjectTexture(Assets::streetTextureName));
+    street->shape->setTexture(*Assets::getObjectTexture(Assets::streetTextureName));
 
-	// get the two points of the front and backPoint
-	sf::Vector2f cordBack = street->backPoint->shape->getPosition();
-	sf::Vector2f cordFront = street->frontPoint->shape->getPosition();
+    if (street->backPoint == nullptr || street->frontPoint == nullptr)
+        return;
 
-	// place it to the smaller cord
-	street->shape->setOrigin(Display::getSidePointOfShape(street->shape, BACK));
-	street->shape->setPosition(*Display::getSmallerVector2f(&cordBack, &cordFront));
-	
-	// get stretch length
-	float xLength = abs(cordBack.x - cordFront.x);
-	float yLength = abs(cordBack.y - cordFront.y);
+    sf::Vector2f cordBack = street->backPoint->shape->getPosition();
+    sf::Vector2f cordFront = street->frontPoint->shape->getPosition();
 
-	// calculate rotation
-	float angle = yLength / xLength;
-	std::cout << "angle: " << angle << std::endl;
-	street->shape->setRotation(angle);
+    street->shape->setOrigin(Display::getSidePointOfShape(street->shape, BACK));
+    street->shape->setPosition(cordBack);
+    
+    float xLength = cordBack.x - cordFront.x;
+    float yLength = cordBack.y - cordFront.y;
 
-	
-	std::cout << "xLength: " << xLength << std::endl;
-	std::cout << "yLength: " << yLength << std::endl;
-	Display::stretchObject(street->shape, xLength, yLength);
+    float angleRad = std::atan2(yLength, xLength);
+	float angle = (angleRad * 180.0f / 3.14f) /*+ 90.f*/;
+    street->shape->setRotation(angle);
 
-	
+    float stretch = std::sqrt(xLength * xLength + yLength * yLength) / Assets::streetSizeY;
+    street->shape->setScale(1.f, stretch);
 }
 
-void Display::getDisplayedRelatedPoint(ConnectionPoint* point, ConnectionPoint** relatedPoint)
+ConnectionPoint* Display::getDisplayedRelatedPoint(ConnectionPoint* point)
 {
-	for (auto& str : point->connections)
+	for (auto& pt : point->connectedPoints)
 	{
-		if (str->backPoint != nullptr && str->backPoint != point && str->backPoint->isDisplayed)
-			*relatedPoint = str->backPoint;
-		if (str->frontPoint != nullptr && str->frontPoint != point && str->frontPoint->isDisplayed)
-			*relatedPoint = str->frontPoint;
+		if (pt->isDisplayed)
+			return pt;
 	}
+	return nullptr;
 }
 
-Object* Display::isSomethingInTheWay(sf::Vector2f* smaller, sf::Vector2f* greater, City* city)
+Object* Display::isSomethingInTheWay(const sf::Vector2f& cord1, const sf::Vector2f& cord2, City* city, sf::Sprite* relatedPointShape)
 {
+	float smallerX = Display::getSmallerFloat(cord1.x, cord2.x);
+	float smallerY = Display::getSmallerFloat(cord1.y, cord2.y);
+	
+	float greaterX = Display::getGreaterFloat(cord1.x, cord2.x);
+	float greaterY = Display::getGreaterFloat(cord1.y, cord2.y);
+
 	for (auto& point : city->points)
 	{
+		if (point->shape == relatedPointShape)
+			continue;
+
 		const sf::Vector2f& currentPointPos = point->shape->getPosition();
-		if ((currentPointPos.x <= greater->x && currentPointPos.y <= greater->y) && (currentPointPos.x >= smaller->x && currentPointPos.y >= smaller->y))
+		if ((currentPointPos.x <= greaterX && currentPointPos.y <= greaterY) && (currentPointPos.x >= smallerX && currentPointPos.y >= smallerY) && point->isDisplayed)
 		{
 			return point;
 		}
@@ -126,28 +174,12 @@ Object* Display::isSomethingInTheWay(sf::Vector2f* smaller, sf::Vector2f* greate
 	for (auto& str : city->streets)
 	{
 		const sf::Vector2f& currentStrPos = str->shape->getPosition();
-		if ((currentStrPos.x <= greater->x && currentStrPos.y <= greater->y) && (currentStrPos.x >= smaller->x && currentStrPos.y >= smaller->y))
+		if ((currentStrPos.x <= greaterX && currentStrPos.y <= greaterY) && (currentStrPos.x >= smallerX && currentStrPos.y >= smallerY) && str->isDisplayed)
 		{
 			return str;
 		}
 	}
 	return nullptr;
-}
-
-sf::Vector2f* Display::getSmallerVector2f(sf::Vector2f* pos1, sf::Vector2f* pos2)
-{
-	if (pos1->x < pos2->x && pos1->y < pos2->y)
-		return pos1;
-	else
-		return pos2;
-}
-
-sf::Vector2f* Display::getGreaterVector2f(sf::Vector2f* pos1, sf::Vector2f* pos2)
-{
-	if (pos1->x > pos2->x && pos1->y > pos2->y)
-		return pos1;
-	else
-		return pos2;
 }
 
 sf::Vector2f Display::getSidePointOfShape(sf::Sprite* shape, DisplaySide side)
@@ -212,7 +244,6 @@ sf::Vector2f Display::getMiddlePoint(const sf::Vector2f& point1, const sf::Vecto
 
 sf::Vector2f* Display::convertDirectionToCord(sf::Sprite* shape, const std::vector<Display::DisplaySide>& directions)
 {
-	// from the vector grab the first element and convert it into a cord relative to the relatedPoint's pos
 	if (directions.empty())
 		return nullptr;
 
@@ -223,41 +254,40 @@ sf::Vector2f* Display::convertDirectionToCord(sf::Sprite* shape, const std::vect
 	return new sf::Vector2f(pos.x + (Display::getXRadiusBound() * xT), pos.y + (Display::getYRadiusBound() * yT));
 }
 
-std::vector<Display::DisplaySide> Display::checkRadiusForDirection(sf::Sprite* shape, City* city)
+std::vector<Display::DisplaySide> Display::checkRadiusForDirection(sf::Sprite* relatedShape, City* city)
 {
-	// check all four side and pop related point sides
 	std::vector<Display::DisplaySide> directions{};
 
 	// RIGHT
-	checkRadiusSides(1.f, 0.f, shape, city, directions);
+	checkRadiusSide(1.f, 0.f, relatedShape, city, directions);
 	// LEFT
-	checkRadiusSides(-1.f, 0.f, shape, city, directions);
+	checkRadiusSide(-1.f, 0.f, relatedShape, city, directions);
 	// BACK
-	checkRadiusSides(0.f, 1.f, shape, city, directions);
+	checkRadiusSide(0.f, 1.f, relatedShape, city, directions);
 	// FRONT
-	checkRadiusSides(0.f, -1.f, shape, city, directions);
-	
-	// FRONT RIGHT
-	checkRadiusSides(2.f, -2.f, shape, city, directions);
-	// FRONT LEFT
-	checkRadiusSides(-2.f, -2.f, shape, city, directions);
-	// BACK RIGHT
-	checkRadiusSides(2.f, 2.f, shape, city, directions);
-	// BACK LEFT
-	checkRadiusSides(-2.f, 2.f, shape, city, directions);
+	checkRadiusSide(0.f, -1.f, relatedShape, city, directions);
+
+	//// FRONT RIGHT
+	//checkRadiusSide(2.f, -2.f, relatedShape, city, directions);
+	//// FRONT LEFT
+	//checkRadiusSide(-2.f, -2.f, relatedShape, city, directions);
+	//// BACK RIGHT
+	//checkRadiusSide(2.f, 2.f, relatedShape, city, directions);
+	//// BACK LEFT
+	//checkRadiusSide(-2.f, 2.f, relatedShape, city, directions);
 
 	return directions;
 }
 
-void Display::checkRadiusSides(const float& xT, const float& yT, sf::Sprite* shape, City* city, std::vector<Display::DisplaySide>& directions)
+void Display::checkRadiusSide(const float& xT, const float& yT, sf::Sprite* relatedShape, City* city, std::vector<Display::DisplaySide>& directions)
 {
-	sf::Vector2f shapePos = shape->getPosition();
+	sf::Vector2f shapePos = relatedShape->getPosition();
 	sf::Vector2f radiusBound(0.f, 0.f);
 
 	radiusBound.x = shapePos.x + (Display::getXRadiusBound() * xT);
 	radiusBound.y = shapePos.y + (Display::getYRadiusBound() * yT);
 
-	Object* obj = Display::isSomethingInTheWay(Display::getSmallerVector2f(&shapePos, &radiusBound), Display::getGreaterVector2f(&shapePos, &radiusBound), city);
+	Object* obj = Display::isSomethingInTheWay(shapePos, radiusBound, city, relatedShape);
 	if (obj == nullptr)
 		directions.emplace_back(Display::getSideByTransformators(xT, yT));
 }
@@ -337,7 +367,17 @@ float Display::getSmallerFloat(const float number1, const float number2)
 	else if (number1 > number2)
 		return number2;
 	else
-		return 0;
+		return number1;
+}
+
+float Display::getGreaterFloat(const float number1, const float number2)
+{
+	if (number1 > number2)
+		return number1;
+	else if (number1 < number2)
+		return number2;
+	else
+		return number1;
 }
 
 float Display::getXRadiusBound()
@@ -363,32 +403,6 @@ Object* Display::getObjectByMouse(const sf::Vector2i mousePos, City* city)
 			return point;
 	}
 	return nullptr;
-}
-
-void Display::stretchObject(sf::Sprite* shape, float xScale, float yScale)
-{
-	if (xScale == 0.f)
-		xScale = 1.f;
-	if (yScale == 0.f)
-		yScale = 1.f;
-
-	shape->setScale(xScale / shape->getGlobalBounds().width, yScale / shape->getGlobalBounds().height);
-}
-
-void  Display::movePointToAnotherPoint(ConnectionPoint* toBeRemoved, ConnectionPoint* relatedPoint, City* city, int& tryCount)
-{
-	relatedPoint->removeRelatedPoint(toBeRemoved, city);
-	//city->getLastCreatedPoint()->connectPoint(toBeRemoved, city);
-	city->getRandomPoint()->connectPoint(toBeRemoved, city);
-	city->movePointToTheBack(toBeRemoved);
-	
-	if (tryCount < 5)
-	{
-		tryCount++;
-		Display::displayPoint(toBeRemoved, city, true, tryCount);
-	}
-	else
-		Display::displayPoint(toBeRemoved, city, false, tryCount);
 }
 
 std::string Display::sideToString(DisplaySide side)
