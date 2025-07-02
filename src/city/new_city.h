@@ -13,10 +13,15 @@ namespace CityFunctions
 
     extern std::vector<std::string> pointNames;
     extern std::vector<std::string> streetNames;
+    extern std::vector<ConnectionPoint*> candidatePoints;
 
     City* generateCity(const std::string& name, int pointCount);
     std::string getRandomName(std::vector<std::string>& names);
     std::vector<std::string> readFile(const std::string& path);
+    void disconnectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2, City* city);
+    bool connectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2, City* city);
+    ConnectionPoint* getValidPoint(City* city, ConnectionPoint* dontMatch, bool checkIsFull, bool checkNoSpaceAround);
+    void removeFromCandidates(ConnectionPoint* point);
 };
 
 enum Sides
@@ -33,8 +38,9 @@ public:
     
     std::string name;
     uint8_t weight;         // between 1-9
-    bool isDisplayed;
     sf::Sprite* shape;
+
+    bool isDisplayed() const;
 };
 
 class ConnectionPoint : public Object
@@ -51,14 +57,17 @@ public:
 
     ~ConnectionPoint();
 
-    void removeRelatedPoint(ConnectionPoint* toBeRemoved, City* city);
+    bool addStreet(Street* street);
     void removeStreet(Street* street);
+
+    bool addPoint(ConnectionPoint* point);
     void removePoint(ConnectionPoint* point);
+
     bool isStreetConnected(Street* street);
-    void calculateCost(uint8_t streetWeight);
-    void connectStreet(Street* street, Sides side);
-    void connectPoint(ConnectionPoint* point, City* city);
     bool isPointAlreadyConnected(ConnectionPoint* point);
+    bool isFull() const;
+
+    void calculateCost(uint8_t streetWeight);
     Street* getSharedStreet(ConnectionPoint* point);
 };
 
@@ -70,9 +79,14 @@ public:
     bool goFront;
     bool goBack;
 
+    int appeared;
+
     Street();
 
     ~Street();
+    
+    bool removePoint(ConnectionPoint* point);
+    void addPoint(ConnectionPoint* point, Sides side);
 };
 
 class City
@@ -81,7 +95,8 @@ public:
     std::string name;
     std::vector<Street*> streets;
     std::vector<ConnectionPoint*> points;
-    std::vector<ConnectionPoint*> toBeMovedPoints;
+    std::vector<ConnectionPoint*> toBeDisplayedPoints;
+    ConnectionPoint* firstDisplayPoint;
 
     City() = default;
     City(const std::string& name);
@@ -89,18 +104,23 @@ public:
     ~City();
 
     void addStreet(Street* street);
-    void removeStreet(Street* street);
-    void addPoint(ConnectionPoint* point);
-    ConnectionPoint* getPointByName(const std::string& name);
-    ConnectionPoint* getRandomPoint();
-    ConnectionPoint* getLastCreatedPoint();
-    void connectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2 = nullptr);
-    std::vector<ConnectionPoint*> getShortestPath(const std::string& base, const std::string& destination);
+    void deleteStreet(Street* street);
+    void removeUnusedStreets();
+    void addPoint(ConnectionPoint* point, bool isDisplayed);
     bool isPointExist(const std::string& name);
+
+    ConnectionPoint* getPointByName(const std::string& name);
+    ConnectionPoint* getRandomPoint(int beginIndex = -1);
+    ConnectionPoint* getLastCreatedPoint();
+
+    std::vector<ConnectionPoint*> getShortestPath(const std::string& base, const std::string& destination);
     void flipVisited();
     void turnStreetsIntoLines();
     void turnStreetsIntoVectors(ConnectionPoint* destination);
+    bool isValidConnectionPoint(ConnectionPoint* point);
 
+    void countMoreThan2ConnectionStreets();
+    void countDisplayedPoints();
     void printPoints(bool details, bool relatedPoints);
     void printStreets(bool details);
 };

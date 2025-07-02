@@ -30,92 +30,56 @@ void Display::refreshFrame(std::vector<City*> cities)
 
 void Display::displayCity(City* city)
 {
-	ConnectionPoint* firstPoint = *city->points.begin();
-	firstPoint->shape->setPosition(0.f,0.f);
-	firstPoint->isDisplayed = true;
-
-	for (auto& point : city->points)
-	{
-		Display::displayPoint(point, city);
-	}
-	std::cout << "----------------------------------------" << std::endl;
-
-	bool found = false;
-	do
-	{
-		found = false;
-		std::cout << city->toBeMovedPoints.size() << std::endl;
-		for (auto& point : city->toBeMovedPoints)
-		{
-			city->connectTwoPoints(point);
-			Display::displayPoint(point, city);
-
-			if (point->shape->getPosition().x != 0.f && point->shape->getPosition().y != 0.f)
-			{
-				for (int i = 0; i < city->toBeMovedPoints.size(); i++)
-				{
-					if (city->toBeMovedPoints[i] == point)
-					{
-						city->toBeMovedPoints.erase(city->toBeMovedPoints.begin() + i);
-						found = true;
-						break;
-					}
-				}
-			}
-
-			if (found)
-				break;
-		}
-	} while (!city->toBeMovedPoints.empty());
-
+	Display::displayFirstPoint(city);
+	Display::displayNewPoints(city);
 
 	/*for (auto& str : city->streets)
 	{
 		Display::displayStreet(str);
 	}*/
 
-	for (auto it = city->streets.begin(); it != city->streets.end(); ) {
-		Street* street = *it;
-		if (street->backPoint == nullptr && street->frontPoint == nullptr) 
-		{
-			delete street;
-			it = city->streets.erase(it);
-		}
-		else 
-		{
-			++it;
-		}
-	}
+	city->removeUnusedStreets();
+	Display::window.display();
 }
 
-void Display::displayPoint(ConnectionPoint* point, City* city)
+bool Display::displayPoint(ConnectionPoint* point, City* city)
 {
 	ConnectionPoint* relatedPoint = Display::getDisplayedRelatedPoint(point);
 
 	if (relatedPoint == nullptr)
 	{
-		std::cout << point->name << "'s related was null" << std::endl;
-		return;
+		std::cout << "[ERROR] " << point->name << "'s related point was null." << std::endl;
+		return false;
 	}
 
-	sf::Vector2f* pos = Display::convertDirectionToCord(relatedPoint->shape, Display::checkRadiusForDirection(relatedPoint->shape, city));
-	if (pos == nullptr)
+	sf::Vector2f pos = Display::convertDirectionToCord(relatedPoint->shape, Display::lookForNearbyEmptySpace(relatedPoint->shape, city));
+	if (pos.x == 0.f && pos.y == 0.f)
 	{
-		std::cout << point->name << "'s pos null" << std::endl;
-		relatedPoint->removeRelatedPoint(point, city);
-		city->toBeMovedPoints.emplace_back(point);
-		return;
+		std::cout << point->name << " pos was null" << std::endl;
+		relatedPoint->noSpaceAround = true;
+		CityFunctions::disconnectTwoPoints(point, relatedPoint, city);
+		Display::movePoint(point, city);
+		return false;
 	}
+	else
+	{
+		point->shape->setTexture(*Assets::getObjectTexture(Assets::pointTextureName));
+		point->shape->setOrigin(point->shape->getGlobalBounds().width / 2.f, point->shape->getGlobalBounds().height / 2.f);
+		point->shape->setPosition(pos);
+		Display::window.draw(*point->shape);
+		return true;
+	}
+}
 
-	point->shape->setTexture(*Assets::getObjectTexture(Assets::pointTextureName));
-	point->shape->setOrigin(point->shape->getGlobalBounds().width / 2.f, point->shape->getGlobalBounds().height / 2.f);
-	point->shape->setPosition(*pos);
-	delete pos;
-	point->isDisplayed = true;
-	Display::window.draw(*point->shape);
-	Display::window.display();
-
-	return;
+void Display::displayFirstPoint(City* city)
+{
+	ConnectionPoint* firstPoint = *city->points.begin();
+	firstPoint->shape->setTexture(*Assets::getObjectTexture(Assets::pointTextureName));
+	firstPoint->shape->setOrigin(firstPoint->shape->getGlobalBounds().width / 2.f, firstPoint->shape->getGlobalBounds().height / 2.f);
+	firstPoint->shape->setPosition(0.f, 0.f);
+	city->toBeDisplayedPoints.erase(std::find(city->toBeDisplayedPoints.begin(), city->toBeDisplayedPoints.end(), firstPoint));
+	city->firstDisplayPoint = firstPoint;
+	Display::window.draw(*firstPoint->shape);
 }
 
 void Display::displayStreet(Street* street)
@@ -135,19 +99,50 @@ void Display::displayStreet(Street* street)
     float yLength = cordBack.y - cordFront.y;
 
     float angleRad = std::atan2(yLength, xLength);
-	float angle = (angleRad * 180.0f / 3.14f) /*+ 90.f*/;
+	float angle = (angleRad * 180.0f / 3.14f);
     street->shape->setRotation(angle);
 
     float stretch = std::sqrt(xLength * xLength + yLength * yLength) / Assets::streetSizeY;
     street->shape->setScale(1.f, stretch);
 }
 
+void Display::displayNewPoints(City* city)
+{
+	std::vector<ConnectionPoint*> parentPoints = { city->firstDisplayPoint }; // already displayed points
+	std::vector<ConnectionPoint*> childPoints{}; // yet to be displayed points
+	do
+	{
+		childPoints.clear();
+
+		for (auto& parentP : parentPoints)
+		{
+			for (auto& parentConnections : parentP->connectedPoints)
+			{
+				if (!parentConnections->isDisplayed() && parentConnections != parentP)
+					childPoints.emplace_back(parentConnections);
+			}
+		}
+
+		parentPoints.clear();
+
+		for (auto& childP : childPoints)
+		{
+			if (Display::displayPoint(childP, city))
+			{
+				parentPoints.emplace_back(childP);
+			}
+		}
+	} while (!childPoints.empty());
+}
+
 ConnectionPoint* Display::getDisplayedRelatedPoint(ConnectionPoint* point)
 {
 	for (auto& pt : point->connectedPoints)
 	{
-		if (pt->isDisplayed)
+		if (pt->isDisplayed())
+		{
 			return pt;
+		}
 	}
 	return nullptr;
 }
@@ -166,7 +161,7 @@ Object* Display::isSomethingInTheWay(const sf::Vector2f& cord1, const sf::Vector
 			continue;
 
 		const sf::Vector2f& currentPointPos = point->shape->getPosition();
-		if ((currentPointPos.x <= greaterX && currentPointPos.y <= greaterY) && (currentPointPos.x >= smallerX && currentPointPos.y >= smallerY) && point->isDisplayed)
+		if ((currentPointPos.x <= greaterX && currentPointPos.y <= greaterY) && (currentPointPos.x >= smallerX && currentPointPos.y >= smallerY) && point->isDisplayed())
 		{
 			return point;
 		}
@@ -174,7 +169,7 @@ Object* Display::isSomethingInTheWay(const sf::Vector2f& cord1, const sf::Vector
 	for (auto& str : city->streets)
 	{
 		const sf::Vector2f& currentStrPos = str->shape->getPosition();
-		if ((currentStrPos.x <= greaterX && currentStrPos.y <= greaterY) && (currentStrPos.x >= smallerX && currentStrPos.y >= smallerY) && str->isDisplayed)
+		if ((currentStrPos.x <= greaterX && currentStrPos.y <= greaterY) && (currentStrPos.x >= smallerX && currentStrPos.y >= smallerY) && str->isDisplayed())
 		{
 			return str;
 		}
@@ -242,19 +237,58 @@ sf::Vector2f Display::getMiddlePoint(const sf::Vector2f& point1, const sf::Vecto
 	return smaller;
 }
 
-sf::Vector2f* Display::convertDirectionToCord(sf::Sprite* shape, const std::vector<Display::DisplaySide>& directions)
+sf::Vector2f Display::convertDirectionToCord(sf::Sprite* shape, const std::vector<Display::DisplaySide>& directions)
 {
 	if (directions.empty())
-		return nullptr;
+		return sf::Vector2f();
 
 	sf::Vector2f pos = shape->getPosition();
 	float xT = 0.f, yT = 0.f;
 	Display::getTransformatorBySide(directions[0], xT, yT);
 
-	return new sf::Vector2f(pos.x + (Display::getXRadiusBound() * xT), pos.y + (Display::getYRadiusBound() * yT));
+	return sf::Vector2f(pos.x + (Display::getXRadiusBound() * xT), pos.y + (Display::getYRadiusBound() * yT));
 }
 
-std::vector<Display::DisplaySide> Display::checkRadiusForDirection(sf::Sprite* relatedShape, City* city)
+bool Display::movePoint(ConnectionPoint* toBeMovedPoint, City* city)
+{
+	std::vector<DisplaySide> directions;
+
+	/*ConnectionPoint* newRelatedPoint = nullptr;
+	while (true)
+	{
+		newRelatedPoint = city->getRandomPoint(0);
+		if (newRelatedPoint->noSpaceAround || newRelatedPoint->isFull || !newRelatedPoint->isDisplayed)
+			continue;
+
+		directions = Display::lookForNearbyEmptySpace(newRelatedPoint->shape, city);
+		if (!directions.empty())
+		{
+			CityFunctions::connectTwoPoints(toBeMovedPoint, newRelatedPoint, city);
+			break;
+		}
+
+		newRelatedPoint->noSpaceAround = true;
+	}*/
+
+	for (auto& newRelatedPoint : city->points)
+	{
+		if (newRelatedPoint->noSpaceAround || newRelatedPoint->isFull() || !newRelatedPoint->isDisplayed())
+			continue;
+
+		directions = Display::lookForNearbyEmptySpace(newRelatedPoint->shape, city);
+		if (!directions.empty())
+		{
+			CityFunctions::connectTwoPoints(toBeMovedPoint, newRelatedPoint, city);
+			return true;
+		}
+
+		newRelatedPoint->noSpaceAround = true;
+	}
+	std::cout << "[ERROR] city is out of unfinished points." << std::endl;
+	return false;
+}
+
+std::vector<Display::DisplaySide> Display::lookForNearbyEmptySpace(sf::Sprite* relatedShape, City* city)
 {
 	std::vector<Display::DisplaySide> directions{};
 
@@ -266,15 +300,6 @@ std::vector<Display::DisplaySide> Display::checkRadiusForDirection(sf::Sprite* r
 	checkRadiusSide(0.f, 1.f, relatedShape, city, directions);
 	// FRONT
 	checkRadiusSide(0.f, -1.f, relatedShape, city, directions);
-
-	//// FRONT RIGHT
-	//checkRadiusSide(2.f, -2.f, relatedShape, city, directions);
-	//// FRONT LEFT
-	//checkRadiusSide(-2.f, -2.f, relatedShape, city, directions);
-	//// BACK RIGHT
-	//checkRadiusSide(2.f, 2.f, relatedShape, city, directions);
-	//// BACK LEFT
-	//checkRadiusSide(-2.f, 2.f, relatedShape, city, directions);
 
 	return directions;
 }
@@ -302,15 +327,6 @@ Display::DisplaySide Display::getSideByTransformators(const float& xT, const flo
 		return BACK;
 	else if (xT == 0.f && yT == -1.f)
 		return FRONT;
-
-	else if (xT == 2.f && yT == 2.f)
-		return BACK_RIGHT;
-	else if (xT == -2.f && yT == 2.f)
-		return BACK_LEFT;
-	else if (xT == 2.f && yT == -2.f)
-		return FRONT_RIGHT;
-	else if (xT == -2.f && yT == -2.f)
-		return FRONT_LEFT;
 	else
 		return INVALID_SIDE;
 }
@@ -336,27 +352,6 @@ void Display::getTransformatorBySide(Display::DisplaySide side, float& xT, float
 	{
 		xT = 0.f;
 		yT = -1.f;
-	}
-
-	else if (side == BACK_RIGHT)
-	{
-		xT = 2.f;
-		yT = 2.f;
-	}
-	else if (side == BACK_LEFT)
-	{
-		xT = -2.f;
-		yT = 2.f;
-	}
-	else if (side == FRONT_RIGHT)
-	{
-		xT = 2.f;
-		yT = -2.f;
-	}
-	else if (side == FRONT_LEFT)
-	{
-		xT = -2.f;
-		yT = -2.f;
 	}
 }
 
@@ -417,14 +412,6 @@ std::string Display::sideToString(DisplaySide side)
 		return "front";
 	case BACK:
 		return "back";
-	case FRONT_RIGHT:
-		return "front_right";
-	case FRONT_LEFT:
-		return "front_left";
-	case BACK_LEFT:
-		return "back_left";
-	case BACK_RIGHT:
-		return "back_right";
 	default:
 		return "invalid_side";
 	}

@@ -10,13 +10,14 @@ int main()
 
     Assets::loadDirectoryElements();
     
-    City* Berlin = CityFunctions::generateCity("Berlin", 100); // 800 point limit -> no names left, dont want points with the same name
+    City* Berlin = CityFunctions::generateCity("Berlin", 20); // 800 point limit -> no names left, dont want points with the same name
 
     Display::displayCity(Berlin);
 
-    std::cout << "points count: " << Berlin->points.size() << " streets count: " << Berlin->streets.size() << std::endl;
-
-    //Berlin->printPoints(false, true);
+    std::cout << "\npoints count: " << Berlin->points.size() << " streets count: " << Berlin->streets.size() << std::endl;
+    Berlin->countDisplayedPoints();
+    Berlin->countMoreThan2ConnectionStreets();
+    //Berlin->printPoints(true, true);
     //Berlin->printStreets(true);
 
     while (Display::window.isOpen())
