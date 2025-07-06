@@ -25,6 +25,7 @@ namespace Display
 	void displayFirstPoint(City* city);
 	void displayStreet(Street* street);
 	void displayNewPoints(City* city);
+	void displayRoute(std::vector<ConnectionPoint*> route);
 
 	Object* isSomethingInTheWay(const sf::Vector2f& cord1, const sf::Vector2f& cord2, City* city, sf::Sprite* ignoreShape);
 	std::vector<Display::DisplaySide> lookForNearbyEmptySpace(sf::Sprite* relatedShape, City* city);

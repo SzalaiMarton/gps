@@ -65,7 +65,7 @@ int main()
                     else if (destinationPoint == nullptr)
                     {
                         FORCE_LOG("Destination point: " << currentPoint->name);
-                        Berlin->getShortestPath(basePoint, destinationPoint);
+                        Display::displayRoute(Berlin->getShortestPath(basePoint, destinationPoint));
                     }
 
                     DEBUG_LOG("maxConnections: " << (int)currentPoint->maxConnection);

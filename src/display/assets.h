@@ -25,6 +25,7 @@ namespace Assets
 	extern std::vector<ObjectTexture*> textureVector;
 	extern std::string streetTextureName;
 	extern std::string pointTextureName;
+	extern std::string routeMarkTextureName;
 	extern float pointSize;
 	extern float streetSizeX;
 	extern float streetSizeY;

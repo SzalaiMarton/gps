@@ -13,6 +13,7 @@ namespace CityFunctions
     std::vector<std::string> pointNames = CityFunctions::readFile("names/point_names.txt");
     std::vector<std::string> streetNames = CityFunctions::readFile("names/street_names.txt");
     std::vector<ConnectionPoint*> candidatePoints{};
+    std::vector<sf::Sprite*> route{};
 }
 
 Street::Street()
@@ -350,6 +351,16 @@ void CityFunctions::removeFromCandidates(ConnectionPoint* point)
     {
         DEBUG_LOG("[CANDIDATE REMOVAL NOT FOUND] " << point->name << " was not found in candidatePoints.");
     }
+}
+
+Street* CityFunctions::getSharedStreet(ConnectionPoint* point1, ConnectionPoint* point2)
+{
+    for (auto& str : point1->connectedStreets)
+    {
+        if ((str->backPoint == point1 && str->frontPoint == point2) || (str->backPoint == point2 && str->frontPoint == point1))
+            return str;
+    }
+    return nullptr;
 }
 
 void City::removeUnusedStreets()

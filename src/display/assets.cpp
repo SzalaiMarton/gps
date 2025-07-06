@@ -13,6 +13,7 @@ namespace Assets
     std::string streetTextureName = "s_street";
     std::string rootTextureName = "s_street";
     std::string pointTextureName = "connection_point";
+    std::string routeMarkTextureName = "route_mark";
 }
 
 Assets::ObjectTexture::ObjectTexture(const std::string& name, sf::Texture* texture)

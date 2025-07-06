@@ -30,6 +30,7 @@ namespace CityFunctions
     extern std::vector<std::string> pointNames;
     extern std::vector<std::string> streetNames;
     extern std::vector<ConnectionPoint*> candidatePoints;
+    extern std::vector<sf::Sprite*> route;
 
     City* generateCity(const std::string& name, int pointCount);
     std::string getRandomName(std::vector<std::string>* names);
@@ -39,6 +40,7 @@ namespace CityFunctions
     ConnectionPoint* getValidPoint(City* city, ConnectionPoint* dontMatch, bool checkIsFull, bool checkNoSpaceAround);
     ConnectionPoint* getRandomCandidate(ConnectionPoint* dontMatch);
     void removeFromCandidates(ConnectionPoint* point);
+    Street* getSharedStreet(ConnectionPoint* point1, ConnectionPoint* point2);
 };
 
 enum Sides

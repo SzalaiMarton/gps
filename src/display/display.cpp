@@ -174,6 +174,25 @@ void Display::displayNewPoints(City* city)
 	DEBUG_LOG("Displaying new points finished.");
 }
 
+void Display::displayRoute(std::vector<ConnectionPoint*> route)
+{
+	Street* sharedStreet = nullptr;
+	ConnectionPoint* prevPoint = nullptr;
+	for (auto& point : route)
+	{
+		if (prevPoint == nullptr)
+		{
+			prevPoint = point;
+			continue;
+		}
+		sharedStreet = CityFunctions::getSharedStreet(point, prevPoint);
+		sf::Sprite* marker = new sf::Sprite();
+		marker = sharedStreet->shape;
+		marker->setTexture(*Assets::getObjectTexture(Assets::routeMarkTextureName));
+		marker->setColor(sf::Color(255,255,255,128));
+	}
+}
+
 ConnectionPoint* Display::getOptimalRelatedPoint(std::vector<ConnectionPoint*>& points, std::vector<ConnectionPoint*>& toBeRemoved)
 {
 	if (points.size() == 1)
