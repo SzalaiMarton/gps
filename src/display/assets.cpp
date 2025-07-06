@@ -10,8 +10,8 @@ namespace Assets
     float streetSizeX = 0.f;
     float streetSizeY = 0.f;
     std::vector<ObjectTexture*> textureVector = {};
-    std::string streetTextureName = "s_street_marked";
-    std::string rootTextureName = "s_street_marked";
+    std::string streetTextureName = "s_street";
+    std::string rootTextureName = "s_street";
     std::string pointTextureName = "connection_point";
 }
 

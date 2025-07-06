@@ -2,23 +2,41 @@
 #include <iostream>
 #include "display/assets.h"
 #include "display/display.h"
+#include <chrono>
+
+#define FORCE_LOG(s) std::cout << s << std::endl
 
 int main()
 {
+    ConnectionPoint* basePoint{}, *destinationPoint{};
     bool isDragging = false;
     sf::Vector2i lastMousePos{};
-
-    Assets::loadDirectoryElements();
     
-    City* Berlin = CityFunctions::generateCity("Berlin", 20); // 800 point limit -> no names left, dont want points with the same name
 
+    LOG("Loading assets.");
+    Assets::loadDirectoryElements();
+
+    auto start = std::chrono::high_resolution_clock::now();
+    LOG("Generating new city.");
+    City* Berlin = CityFunctions::generateCity("Berlin", 500); // 800 point limit -> no names left, dont want points with the same name
+    LOG("Finished generating new city.");
+    
+    LOG("Displaying " << Berlin->name);
     Display::displayCity(Berlin);
+    LOG("Displaying " << Berlin->name << " finished.");
 
-    std::cout << "\npoints count: " << Berlin->points.size() << " streets count: " << Berlin->streets.size() << std::endl;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+
+    LOG("Time elapsed: " << elapsed.count() << "s.");
+    LOG("\npoints count: " << Berlin->points.size() << " streets count: " << Berlin->streets.size());
+
     Berlin->countDisplayedPoints();
-    Berlin->countMoreThan2ConnectionStreets();
-    //Berlin->printPoints(true, true);
+    //Berlin->countMoreThan2ConnectionStreets();
+    //Berlin->printPoints(false, true);
     //Berlin->printStreets(true);
+    
+    Display::window.setFramerateLimit(60);
 
     while (Display::window.isOpen())
     {
@@ -36,23 +54,27 @@ int main()
                 lastMousePos = sf::Mouse::getPosition(Display::window);
 
                 sf::Vector2f mouseWorldPos = Display::window.mapPixelToCoords(lastMousePos);
-                Object* obj = Display::getObjectByMouse((sf::Vector2i)mouseWorldPos, Berlin);
-                Street* currentStr = dynamic_cast<Street*>(obj);
-                ConnectionPoint* currentPoint = dynamic_cast<ConnectionPoint*>(obj);
+                ConnectionPoint* currentPoint = dynamic_cast<ConnectionPoint*>(Display::getObjectByMouse((sf::Vector2i)mouseWorldPos, Berlin));
                 if (currentPoint != nullptr)
                 {
-                    std::cout << "current point: " << currentPoint->name << std::endl;
-                    std::cout << "maxConnections: " << (int)currentPoint->maxConnection << "\n" << std::endl;
-                }
-                if (currentStr != nullptr)
-                {
-                    std::cout << "current str: " << currentStr->name << std::endl;
+                    if (basePoint == nullptr)
+                    {
+                        FORCE_LOG("Base point: " << currentPoint->name);
+                        FORCE_LOG("Pick another point to get shortest route.");
+                    }
+                    else if (destinationPoint == nullptr)
+                    {
+                        FORCE_LOG("Destination point: " << currentPoint->name);
+                        Berlin->getShortestPath(basePoint, destinationPoint);
+                    }
 
-                    if (currentStr->backPoint)
-                        std::cout << "backName: " << currentStr->backPoint->name << std::endl;
-                    if (currentStr->frontPoint)
-                        std::cout << "frontPoint: " << currentStr->frontPoint->name << std::endl;
-                    std::cout << std::endl;
+                    DEBUG_LOG("maxConnections: " << (int)currentPoint->maxConnection);
+                    DEBUG_LOG("Connected points: ");
+                    for (auto& point : currentPoint->connectedPoints)
+                    {
+                        DEBUG_LOG("\t" << point->name);
+                    }
+                    DEBUG_LOG("\n");
                 }
             }
             if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
@@ -64,12 +86,12 @@ int main()
             {
                 if (event.mouseWheelScroll.delta > 0)
                 {
-                    Display::camera.zoom(0.9f);
+                    Display::camera.zoom(0.8f);
                     Display::window.setView(Display::camera);
                 }
                 else
                 {
-                    Display::camera.zoom(1.1f);
+                    Display::camera.zoom(1.2f);
                     Display::window.setView(Display::camera);
                 }
             }

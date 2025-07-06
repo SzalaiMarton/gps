@@ -4,23 +4,40 @@
 #include <string>
 #include "../../include/SFML/Graphics.hpp"
 
+#define LOGGING 0
+#define DEBUGGING 0
+
+// DEBUG LOGGING
+#if DEBUGGING
+#define DEBUG_LOG(s) std::cout << s << std::endl
+#else
+#define DEBUG_LOG(s) ((void)0)
+#endif
+
+// LOGGING
+#if LOGGING
+#define LOG(s) std::cout << s << std::endl
+#else
+#define LOG(s) ((void)0)
+#endif
+
 class Street;
 class City;
 class ConnectionPoint;
 
 namespace CityFunctions
 {
-
     extern std::vector<std::string> pointNames;
     extern std::vector<std::string> streetNames;
     extern std::vector<ConnectionPoint*> candidatePoints;
 
     City* generateCity(const std::string& name, int pointCount);
-    std::string getRandomName(std::vector<std::string>& names);
+    std::string getRandomName(std::vector<std::string>* names);
     std::vector<std::string> readFile(const std::string& path);
     void disconnectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2, City* city);
-    bool connectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2, City* city);
+    bool connectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2, City* city, bool& outOfCandidates);
     ConnectionPoint* getValidPoint(City* city, ConnectionPoint* dontMatch, bool checkIsFull, bool checkNoSpaceAround);
+    ConnectionPoint* getRandomCandidate(ConnectionPoint* dontMatch);
     void removeFromCandidates(ConnectionPoint* point);
 };
 
@@ -60,7 +77,7 @@ public:
     bool addStreet(Street* street);
     void removeStreet(Street* street);
 
-    bool addPoint(ConnectionPoint* point);
+    bool addPoint(ConnectionPoint* point, bool& isAlreadyIn);
     void removePoint(ConnectionPoint* point);
 
     bool isStreetConnected(Street* street);
@@ -113,7 +130,7 @@ public:
     ConnectionPoint* getRandomPoint(int beginIndex = -1);
     ConnectionPoint* getLastCreatedPoint();
 
-    std::vector<ConnectionPoint*> getShortestPath(const std::string& base, const std::string& destination);
+    std::vector<ConnectionPoint*> getShortestPath(ConnectionPoint* base, ConnectionPoint* destination);
     void flipVisited();
     void turnStreetsIntoLines();
     void turnStreetsIntoVectors(ConnectionPoint* destination);

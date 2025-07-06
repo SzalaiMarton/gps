@@ -17,7 +17,7 @@ namespace CityFunctions
 
 Street::Street()
 {
-    this->name = CityFunctions::getRandomName(CityFunctions::streetNames);
+    this->name = CityFunctions::getRandomName(&CityFunctions::streetNames);
     this->backPoint = nullptr;
     this->frontPoint = nullptr;
     this->goFront = false;
@@ -38,29 +38,33 @@ Street::~Street()
         this->frontPoint->removeStreet(this);
 }
 
-bool ConnectionPoint::addPoint(ConnectionPoint* point)
+bool ConnectionPoint::addPoint(ConnectionPoint* point, bool& isAlreadyIn)
 {
     if (point == this)
     {
-        std::cout << "[IDENTICAL POINT] cannot add point to itself. " << point->name << std::endl;
+        DEBUG_LOG("[IDENTICAL POINT] cannot add point to itself. " << point->name);
         return false;
     }
-
-    if (this->isFull())
+    else if (this->isFull())
     {
-        std::cout << "[POINT FULL] cannot add more streets to " << this->name << std::endl;
+        DEBUG_LOG("[POINT FULL] cannot add more streets to " << this->name);
         CityFunctions::removeFromCandidates(this);
         return false;
     }
-
-    if (this->isPointAlreadyConnected(point))
+    else if (this->isPointAlreadyConnected(point))
     {
-        std::cout << "[ALREADY CONNECTED POINT] " << point->name << " is already connected to " << this->name << std::endl;
+        DEBUG_LOG("[ALREADY CONNECTED POINT] " << point->name << " is already connected to " << this->name);
+        isAlreadyIn = true;
         return true;
     }
     else
     {
+        DEBUG_LOG("[ADDITION] " << point->name << " was added to " << this->name);
         this->connectedPoints.emplace_back(point);
+
+        if (this->isFull())
+            CityFunctions::removeFromCandidates(this);
+        
         return true;
     }
 }
@@ -70,11 +74,11 @@ void ConnectionPoint::removePoint(ConnectionPoint* point)
     auto index = std::find(this->connectedPoints.begin(), this->connectedPoints.end(), point);
     if (index == this->connectedPoints.end())
     {
-        std::cout << "[REMOVE POINT NOT FOUND] " << point->name << " was not found in " << this->name << "'s connections" << std::endl;
+        DEBUG_LOG("[REMOVE POINT NOT FOUND] " << point->name << " was not found in " << this->name << "'s connections");
     }
     else
     {
-        std::cout << "[REMOVAL] " << point->name << " was removed from " << this->name << std::endl;
+        DEBUG_LOG("[REMOVAL] " << point->name << " was removed from " << this->name);
         this->connectedPoints.erase(index);
     }
 }
@@ -84,11 +88,12 @@ void ConnectionPoint::removeStreet(Street* street)
     auto index = std::find(this->connectedStreets.begin(), this->connectedStreets.end(), street);
     if (index == this->connectedStreets.end())
     {
-        std::cout << "[REMOVE STREET NOT FOUND] " << street->name << " was not found in " << this->name << "'s connections" << std::endl;
+        DEBUG_LOG("[REMOVE STREET NOT FOUND] " << street->name << " was not found in " << this->name << "'s connections");
     }
     else
     {
         this->connectedStreets.erase(index);
+        DEBUG_LOG("[REMOVE STREET] " << street->name << " has been removed from " << this->name << "'s connections");
     }
 }
 
@@ -105,6 +110,7 @@ bool ConnectionPoint::isStreetConnected(Street* street)
 City::City(const std::string& name)
 {
     this->name = name;
+    this->firstDisplayPoint = nullptr;
     this->streets = std::vector<Street*>();
     this->points = std::vector<ConnectionPoint*>();
 }
@@ -132,8 +138,15 @@ void City::addStreet(Street *street)
 
 void City::deleteStreet(Street* street)
 {
-    this->streets.erase(std::find(this->streets.begin(), this->streets.end(), street));
-    delete street;
+    auto it = std::find(this->streets.begin(), this->streets.end(), street);
+    if (it != this->streets.end())
+    {
+        this->streets.erase(it);
+        DEBUG_LOG("[DELETION] " << street->name << " has been deleted.");
+        delete street;
+    }
+    else
+        DEBUG_LOG("[DELETION ERROR] failed to delete " << street->name << "'s connections");
 }
 
 void City::addPoint(ConnectionPoint* point, bool isDisplayed)
@@ -148,41 +161,43 @@ City* CityFunctions::generateCity(const std::string& name, int pointCount)
 {
     City* createdCity = new City(name);
 
+    LOG("Creating points for new city.");
     for (int i = 0; i < pointCount; i++)
     {
         createdCity->addPoint(new ConnectionPoint(), false);
     }
-
+    LOG("Finished creating points for new city.");
+    
+    LOG("Connecting points.");
+    int index = 1;
+    bool outOfCandidates = false;
     for (auto& point : createdCity->points)
     {
-        for (int i = 0; i < point->maxConnection; i++)
+        while (!point->isFull())
         {
-            if (point->isFull())
-            {
+            CityFunctions::connectTwoPoints(point, nullptr, createdCity, outOfCandidates);
+            if (outOfCandidates)
                 break;
-            }
-            if (!CityFunctions::connectTwoPoints(point, nullptr, createdCity))
-            {
-                i--;
-            }
         }
+        index++;
     }
+    LOG("Finished connecting points.");
 
     return createdCity;
 }
 
-std::string CityFunctions::getRandomName(std::vector<std::string>& names)
+std::string CityFunctions::getRandomName(std::vector<std::string>* names)
 {
-    if (names.empty())
+    if (names->empty())
     {
         throw std::runtime_error("No names available to select.");
     }
 
-    std::uniform_int_distribution<> distrib(0, names.size() - 1);
+    std::uniform_int_distribution<> distrib(0, names->size() - 1);
     
     int nameIndex = distrib(gen);
-    std::string streetName = names[nameIndex];
-    names.erase(names.begin() + nameIndex);
+    std::string streetName = (*names)[nameIndex];
+    names->erase(names->begin() + nameIndex);
     return streetName;
 }
 
@@ -203,6 +218,12 @@ void CityFunctions::disconnectTwoPoints(ConnectionPoint* point1, ConnectionPoint
 {
     Street* sharedStreet = point1->getSharedStreet(point2);
 
+    if (sharedStreet == nullptr)
+    {
+        LOG("[SHARED STREET NOT FOUND] between " << point1->name << " and " << point2->name << " shared street isnt found.");
+        return;
+    }
+
     point1->removeStreet(sharedStreet);
     point2->removeStreet(sharedStreet);
 
@@ -212,43 +233,58 @@ void CityFunctions::disconnectTwoPoints(ConnectionPoint* point1, ConnectionPoint
     point2->removePoint(point1);
 }
 
-bool CityFunctions::connectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2, City* city)
+bool CityFunctions::connectTwoPoints(ConnectionPoint* point1, ConnectionPoint* point2, City* city, bool& outOfCandidates)
 {
-    point1 = (point1 == nullptr) ? CityFunctions::getValidPoint(city, point2, true, false) : point1;
     point2 = (point2 == nullptr) ? CityFunctions::getValidPoint(city, point1, true, false) : point2;
 
-    bool succsessPoint1 = point1->addPoint(point2);
-    bool succsessPoint2 = point2->addPoint(point1);
-
-    if (!succsessPoint1 || !succsessPoint2)
+    if (point2 == nullptr)
     {
-        point1->removePoint(point2);
-        point2->removePoint(point1);
-
-        if (succsessPoint1 && !succsessPoint2)
-            return false;
-        else
-            return true;
+        outOfCandidates = true;
+        return false;
     }
 
+    bool isAlreadyIn = false;
+    bool p1_Success = point1->addPoint(point2, isAlreadyIn);
 
-    Street* str = new Street();
+    if (p1_Success && !isAlreadyIn)
+    {
+        bool p2_Success = point2->addPoint(point1, isAlreadyIn);
+        if (p2_Success && !isAlreadyIn)
+        {
+            Street* str = new Street();
 
-    city->addStreet(str);
+            city->addStreet(str);
 
-    point1->addStreet(str);
-    point2->addStreet(str);
+            point1->addStreet(str);
+            point2->addStreet(str);
 
-    str->addPoint(point1, BACK);
-    str->addPoint(point2, FRONT);
+            str->addPoint(point1, BACK);
+            str->addPoint(point2, FRONT);
 
-    return true;
+            return true;
+        }
+        else
+        {
+            point1->removePoint(point2);
+            point2->removePoint(point1);
+        }
+    }
+    else if (!p1_Success && !isAlreadyIn)
+    {
+        point1->removePoint(point2);
+        return false;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 ConnectionPoint* CityFunctions::getValidPoint(City* city, ConnectionPoint* dontMatch, bool checkIsFull, bool checkNoSpaceAround)
 {
     if (candidatePoints.empty())
     {
+        DEBUG_LOG("Getting candidates...");
         for (auto& point : city->points)
         {
             if (point == dontMatch)
@@ -259,13 +295,47 @@ ConnectionPoint* CityFunctions::getValidPoint(City* city, ConnectionPoint* dontM
                 continue;
             candidatePoints.emplace_back(point);
         }
+        DEBUG_LOG("Finished getting candidates.");
     }
 
     if (candidatePoints.empty())
+    {
+        LOG("Out of candidates.");
         return nullptr;
+    }
 
+    return CityFunctions::getRandomCandidate(dontMatch);
+}
+
+ConnectionPoint* CityFunctions::getRandomCandidate(ConnectionPoint* dontMatch)
+{
     std::uniform_int_distribution<> distrib(0, candidatePoints.size() - 1);
-    return candidatePoints[distrib(gen)];
+    ConnectionPoint* candidate = candidatePoints[distrib(gen)];
+
+    if (candidatePoints.size() == 1 && candidatePoints[0] == dontMatch)
+    {
+        DEBUG_LOG("Candidate vector had only one element.");
+        candidatePoints.clear();
+        DEBUG_LOG("Candidate vector cleared.");
+        return nullptr;
+    }
+    else if (candidatePoints.size() == 1)
+    {
+        return candidatePoints[0];
+    }
+    else
+    {
+        DEBUG_LOG("Getting random candidate...");
+        while (candidate == dontMatch)
+        {
+            candidate = candidatePoints[distrib(gen)];
+            if (candidate != dontMatch)
+                return candidate;
+        }
+        DEBUG_LOG("Finished candidate search.");
+
+        return candidate;
+    }
 }
 
 void CityFunctions::removeFromCandidates(ConnectionPoint* point)
@@ -273,12 +343,12 @@ void CityFunctions::removeFromCandidates(ConnectionPoint* point)
     auto it = std::find(candidatePoints.begin(), candidatePoints.end(), point);
     if (it != candidatePoints.end())
     {
-        std::cout << "[CANDIDATE REMOVAL] " << point->name << " was removed from candidates." << std::endl;
+        DEBUG_LOG("[CANDIDATE REMOVAL] " << point->name << " was removed from candidates.");
         candidatePoints.erase(it);
     }
     else
     {
-        std::cout << "[CANDIDATE REMOVAL NOT FOUND] " << point->name << " was not found in candidatePoints." << std::endl;
+        DEBUG_LOG("[CANDIDATE REMOVAL NOT FOUND] " << point->name << " was not found in candidatePoints.");
     }
 }
 
@@ -323,52 +393,50 @@ ConnectionPoint* City::getLastCreatedPoint()
     return point;
 }
 
-std::vector<ConnectionPoint*> City::getShortestPath(const std::string& base, const std::string& destination)
+std::vector<ConnectionPoint*> City::getShortestPath(ConnectionPoint* base, ConnectionPoint* destination)
 {
     std::vector<ConnectionPoint*> visited = std::vector<ConnectionPoint*>();
     
-    ConnectionPoint* basePoint = this->getPointByName(base);
-    ConnectionPoint* destinationPoint = this->getPointByName(destination);
     ConnectionPoint* currentPoint = nullptr;
     ConnectionPoint* smallest = nullptr;
 
-    if (basePoint == nullptr)
+    if (base == nullptr)
     {
         std::cout << "starting point doesn't exist" << std::endl;
         return visited;
     }
 
-    if (destinationPoint == nullptr)
+    if (destination == nullptr)
     {
         std::cout << "destination point doesn't exist" << std::endl;
         return visited;
     }
 
-    this->turnStreetsIntoVectors(destinationPoint);
+    this->turnStreetsIntoVectors(destination);
     //this->printStreets(false);
 
     do
     {
-        if (basePoint == nullptr)
+        if (base == nullptr)
         {
             std::cout << "base point was nullptr" << std::endl;
             break;
         }
 
-        visited.emplace_back(basePoint);
-        basePoint->isVisited = true;
+        visited.emplace_back(base);
+        base->isVisited = true;
 
-        if (basePoint != nullptr && basePoint == destinationPoint)
+        if (base != nullptr && base == destination)
         {
             std::cout << "destination reached" << std::endl;
             break;
         }
 
-        for (auto& str : basePoint->connectedStreets)
+        for (auto& str : base->connectedStreets)
         {
-            if (str->backPoint != nullptr && str->backPoint != basePoint && str->goBack)
+            if (str->backPoint != nullptr && str->backPoint != base && str->goBack)
                 currentPoint = str->backPoint;
-            else if (str->frontPoint != nullptr && str->frontPoint != basePoint && str->goFront)
+            else if (str->frontPoint != nullptr && str->frontPoint != base && str->goFront)
                 currentPoint = str->frontPoint;
 
             if (smallest == nullptr && currentPoint != nullptr && !currentPoint->isVisited)
@@ -386,7 +454,7 @@ std::vector<ConnectionPoint*> City::getShortestPath(const std::string& base, con
             }
         }
 
-        basePoint = smallest;
+        base = smallest;
         smallest = nullptr;
     } while (true);
 
@@ -471,7 +539,7 @@ void City::countMoreThan2ConnectionStreets()
         if (str->appeared > 2)
             count++;
     }
-    std::cout << "Number of streets that has more than two connections: " << count << std::endl;
+    LOG("Number of streets that has more than two connections: " << count);
 }
 
 void City::countDisplayedPoints()
@@ -482,7 +550,7 @@ void City::countDisplayedPoints()
         if (point->isDisplayed())
             i++;
     }
-    std::cout << "displayed points count: " << i << std::endl;
+    LOG("displayed points count: " << i);
 }
 
 void City::printPoints(bool details, bool relatedPoints)
@@ -544,7 +612,7 @@ ConnectionPoint::ConnectionPoint()
 {
     this->connectedStreets = std::vector<Street*>();
     this->connectedPoints = std::vector<ConnectionPoint*>();
-    this->name = CityFunctions::getRandomName(CityFunctions::pointNames);
+    this->name = CityFunctions::getRandomName(&CityFunctions::pointNames);
     this->cost = 0;
     this->isVisited = false;
     this->noSpaceAround = false;
@@ -580,7 +648,7 @@ bool ConnectionPoint::addStreet(Street* street)
     }
     else
     {
-        std::cout << "[ALREADY CONNECTED] " << street->name << " was already connected to " << this->name << std::endl;
+        DEBUG_LOG("[ALREADY CONNECTED] " << street->name << " was already connected to " << this->name);
         return false;
     }
 }
