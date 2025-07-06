@@ -408,65 +408,41 @@ std::vector<ConnectionPoint*> City::getShortestPath(ConnectionPoint* base, Conne
 {
     std::vector<ConnectionPoint*> visited = std::vector<ConnectionPoint*>();
     
-    ConnectionPoint* currentPoint = nullptr;
     ConnectionPoint* smallest = nullptr;
-
-    if (base == nullptr)
-    {
-        std::cout << "starting point doesn't exist" << std::endl;
-        return visited;
-    }
-
-    if (destination == nullptr)
-    {
-        std::cout << "destination point doesn't exist" << std::endl;
-        return visited;
-    }
 
     this->turnStreetsIntoVectors(destination);
     //this->printStreets(false);
 
     do
     {
-        if (base == nullptr)
-        {
-            std::cout << "base point was nullptr" << std::endl;
-            break;
-        }
-
         visited.emplace_back(base);
-        base->isVisited = true;
 
-        if (base != nullptr && base == destination)
-        {
-            std::cout << "destination reached" << std::endl;
+        if (base == destination)
             break;
-        }
 
-        for (auto& str : base->connectedStreets)
+        for (auto& connectedPoints : base->connectedPoints)
         {
-            if (str->backPoint != nullptr && str->backPoint != base && str->goBack)
-                currentPoint = str->backPoint;
-            else if (str->frontPoint != nullptr && str->frontPoint != base && str->goFront)
-                currentPoint = str->frontPoint;
+            Street* sharedStreet = CityFunctions::getSharedStreet(connectedPoints, base);
 
-            if (smallest == nullptr && currentPoint != nullptr && !currentPoint->isVisited)
+            if (/*sharedStreet == nullptr || */(sharedStreet->goBack && sharedStreet->backPoint != connectedPoints) || (sharedStreet->goFront && sharedStreet->frontPoint != connectedPoints))
+                continue;
+
+            if (connectedPoints->cost == 0)
+                connectedPoints->calculateCost(sharedStreet->weight);
+
+            if (smallest == nullptr)
             {
-                smallest = currentPoint;
-                smallest->calculateCost(str->weight);
+                smallest = connectedPoints;
                 continue;
             }
-
-            if (currentPoint != nullptr && smallest != nullptr)
+            else if (smallest->cost > connectedPoints->cost)
             {
-                currentPoint->calculateCost(str->weight);
-                if (smallest->cost > currentPoint->cost && !currentPoint->isVisited)
-                    smallest = currentPoint;
+                smallest = connectedPoints;
             }
         }
-
         base = smallest;
         smallest = nullptr;
+
     } while (true);
 
     this->turnStreetsIntoLines();
@@ -489,6 +465,7 @@ void City::flipVisited()
     for (auto& point : this->points)
     {
         point->isVisited = false;
+        point->cost = 0;
     }
 }
 
@@ -706,6 +683,15 @@ bool City::isValidConnectionPoint(ConnectionPoint* point)
     }
 
     return true;
+}
+
+void CityFunctions::clearRoute()
+{
+    for (auto str : CityFunctions::route)
+    {
+        delete str;
+    }
+    CityFunctions::route.clear();
 }
 
 bool ConnectionPoint::isPointAlreadyConnected(ConnectionPoint* point)

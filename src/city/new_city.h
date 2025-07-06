@@ -7,6 +7,8 @@
 #define LOGGING 0
 #define DEBUGGING 0
 
+#define FORCE_LOG(s) std::cout << s << std::endl
+
 // DEBUG LOGGING
 #if DEBUGGING
 #define DEBUG_LOG(s) std::cout << s << std::endl
@@ -41,6 +43,7 @@ namespace CityFunctions
     ConnectionPoint* getRandomCandidate(ConnectionPoint* dontMatch);
     void removeFromCandidates(ConnectionPoint* point);
     Street* getSharedStreet(ConnectionPoint* point1, ConnectionPoint* point2);
+    void clearRoute();
 };
 
 enum Sides

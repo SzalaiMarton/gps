@@ -23,6 +23,10 @@ void Display::refreshFrame(std::vector<City*> cities)
 		{
 			Display::window.draw(*str->shape);
 		}
+		for (auto& mark : CityFunctions::route)
+		{
+			Display::window.draw(*mark);
+		}
 		for (auto& point : city->points)
 		{
 			Display::window.draw(*point->shape);
@@ -177,19 +181,19 @@ void Display::displayNewPoints(City* city)
 void Display::displayRoute(std::vector<ConnectionPoint*> route)
 {
 	Street* sharedStreet = nullptr;
-	ConnectionPoint* prevPoint = nullptr;
-	for (auto& point : route)
+	ConnectionPoint* prevPoint = *route.begin();
+	for (auto pointIT = route.begin() + 1; pointIT != route.end(); pointIT++)
 	{
-		if (prevPoint == nullptr)
+		sharedStreet = CityFunctions::getSharedStreet(*pointIT, prevPoint);
+		if (sharedStreet == nullptr)
 		{
-			prevPoint = point;
-			continue;
+			return;
 		}
-		sharedStreet = CityFunctions::getSharedStreet(point, prevPoint);
-		sf::Sprite* marker = new sf::Sprite();
-		marker = sharedStreet->shape;
+		sf::Sprite* marker = new sf::Sprite(*sharedStreet->shape);
 		marker->setTexture(*Assets::getObjectTexture(Assets::routeMarkTextureName));
 		marker->setColor(sf::Color(255,255,255,128));
+		CityFunctions::route.emplace_back(marker);
+		prevPoint = *pointIT;
 	}
 }
 
@@ -518,15 +522,16 @@ float Display::getRadiusBound()
 
 Object* Display::getObjectByMouse(const sf::Vector2i mousePos, City* city)
 {
-	//for (auto& str : city->streets)
-	//{
-	//	if (str->shape->getGlobalBounds().contains((float)mousePos.x, (float)mousePos.y))
-	//		return str;
-	//}
+	
 	for (auto& point : city->points)
 	{
 		if (point->shape->getGlobalBounds().contains((float)mousePos.x, (float)mousePos.y))
 			return point;
+	}
+	for (auto& str : city->streets)
+	{
+		if (str->shape->getGlobalBounds().contains((float)mousePos.x, (float)mousePos.y))
+			return str;
 	}
 	return nullptr;
 }

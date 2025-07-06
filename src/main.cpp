@@ -4,21 +4,19 @@
 #include "display/display.h"
 #include <chrono>
 
-#define FORCE_LOG(s) std::cout << s << std::endl
 
 int main()
 {
     ConnectionPoint* basePoint{}, *destinationPoint{};
     bool isDragging = false;
     sf::Vector2i lastMousePos{};
-    
 
     LOG("Loading assets.");
     Assets::loadDirectoryElements();
 
     auto start = std::chrono::high_resolution_clock::now();
     LOG("Generating new city.");
-    City* Berlin = CityFunctions::generateCity("Berlin", 500); // 800 point limit -> no names left, dont want points with the same name
+    City* Berlin = CityFunctions::generateCity("Berlin", 800); // 800 point limit -> no names left, dont want points with the same name
     LOG("Finished generating new city.");
     
     LOG("Displaying " << Berlin->name);
@@ -30,11 +28,6 @@ int main()
 
     LOG("Time elapsed: " << elapsed.count() << "s.");
     LOG("\npoints count: " << Berlin->points.size() << " streets count: " << Berlin->streets.size());
-
-    Berlin->countDisplayedPoints();
-    //Berlin->countMoreThan2ConnectionStreets();
-    //Berlin->printPoints(false, true);
-    //Berlin->printStreets(true);
     
     Display::window.setFramerateLimit(60);
 
@@ -59,13 +52,18 @@ int main()
                 {
                     if (basePoint == nullptr)
                     {
+                        basePoint = currentPoint;
                         FORCE_LOG("Base point: " << currentPoint->name);
-                        FORCE_LOG("Pick another point to get shortest route.");
                     }
                     else if (destinationPoint == nullptr)
                     {
-                        FORCE_LOG("Destination point: " << currentPoint->name);
+                        destinationPoint = currentPoint;
+                        FORCE_LOG("Destination point: " << currentPoint->name << "\n");
                         Display::displayRoute(Berlin->getShortestPath(basePoint, destinationPoint));
+                    }
+                    else
+                    {
+                        FORCE_LOG("Current point: " << currentPoint->name);
                     }
 
                     DEBUG_LOG("maxConnections: " << (int)currentPoint->maxConnection);
@@ -77,6 +75,14 @@ int main()
                     DEBUG_LOG("\n");
                 }
             }
+            else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right)
+            {
+                basePoint = nullptr;
+                destinationPoint = nullptr;
+                CityFunctions::clearRoute();
+                FORCE_LOG("Base and destination points cleared.");
+            }
+
             if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
             {
                 isDragging = false;
@@ -88,11 +94,13 @@ int main()
                 {
                     Display::camera.zoom(0.8f);
                     Display::window.setView(Display::camera);
+                    Display::refreshFrame({ Berlin });
                 }
                 else
                 {
                     Display::camera.zoom(1.2f);
                     Display::window.setView(Display::camera);
+                    Display::refreshFrame({ Berlin });
                 }
             }
         }
@@ -104,6 +112,7 @@ int main()
             Display::camera.move(delta);
             lastMousePos = mousePos;
             Display::window.setView(Display::camera);
+            Display::refreshFrame({ Berlin });
         }
 
         Display::refreshFrame({ Berlin });
@@ -114,5 +123,10 @@ int main()
     {
         delete texture;
     }
+    for (auto str : CityFunctions::route)
+    {
+        delete str;
+    }
+    CityFunctions::route.clear();
     Assets::textureVector.clear();
 }
